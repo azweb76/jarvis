@@ -3,10 +3,14 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  ApiKeyHelperError,
   CLAUDE_CODE_IDENTITY_PROMPT,
   clearApiKeyHelperCache,
+  formatAuthError,
   readClaudeSettings,
-  resolveClaudeAuth
+  resolveClaudeAuth,
+  resolveClaudeConfigDir,
+  validateHelperCredential
 } from "../src/core/claude-auth.js";
 
 const tempDirs: string[] = [];
@@ -138,6 +142,26 @@ describe("resolveClaudeAuth", () => {
     });
   });
 
+  it("honors CLAUDE_CONFIG_DIR for settings", () => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), "jarvis-claude-home-"));
+    const configDir = fs.mkdtempSync(path.join(os.tmpdir(), "jarvis-claude-config-"));
+    tempDirs.push(home, configDir);
+    fs.writeFileSync(
+      path.join(configDir, "settings.json"),
+      JSON.stringify({ apiKeyHelper: "custom-dir-helper" })
+    );
+    const auth = resolveClaudeAuth(
+      { CLAUDE_CONFIG_DIR: configDir },
+      {
+        homeDir: home,
+        allowCredentialsFile: false,
+        runHelper: () => "sk-ant-from-config-dir"
+      }
+    );
+    expect(auth.apiKey).toBe("sk-ant-from-config-dir");
+    expect(auth.source.includes("settings.json#apiKeyHelper")).toBe(true);
+  });
+
   it("executes apiKeyHelper through /bin/sh by default", () => {
     const home = makeHomeWithSettings({
       apiKeyHelper: "printf '%s' 'sk-ant-shell-helper'"
@@ -152,6 +176,42 @@ describe("resolveClaudeAuth", () => {
     );
     expect(auth.apiKey).toBe("sk-ant-shell-helper");
     expect(auth.source).toBe("~/.claude/settings.json#apiKeyHelper");
+  });
+
+  it("passes settings env into the helper subprocess", () => {
+    const home = makeHomeWithSettings({
+      apiKeyHelper: "helper",
+      env: { VAULT_ADDR: "https://vault.example" }
+    });
+    let seenEnv: NodeJS.ProcessEnv | undefined;
+    const auth = resolveClaudeAuth(
+      {},
+      {
+        homeDir: home,
+        allowCredentialsFile: false,
+        runHelper: (_command, helperEnv) => {
+          seenEnv = helperEnv;
+          return "sk-ant-with-settings-env";
+        }
+      }
+    );
+    expect(auth.apiKey).toBe("sk-ant-with-settings-env");
+    expect(seenEnv?.VAULT_ADDR).toBe("https://vault.example");
+  });
+
+  it("uses credentials from settings env when process env is unset", () => {
+    const home = makeHomeWithSettings({
+      env: { ANTHROPIC_API_KEY: "sk-ant-from-settings-env" }
+    });
+    const auth = resolveClaudeAuth(
+      {},
+      { homeDir: home, allowCredentialsFile: false, allowSettingsHelper: false }
+    );
+    expect(auth).toEqual({
+      mode: "api_key",
+      apiKey: "sk-ant-from-settings-env",
+      source: "settings.env.ANTHROPIC_API_KEY"
+    });
   });
 
   it("treats oat-prefixed helper output as Claude Code OAuth", () => {
@@ -261,23 +321,62 @@ describe("resolveClaudeAuth", () => {
     expect(calls).toBe(2);
   });
 
-  it("falls through when apiKeyHelper fails", () => {
+  it("throws when apiKeyHelper fails instead of silently falling through", () => {
     const home = makeHomeWithCredentials("sk-ant-oat-fallback");
     fs.writeFileSync(
       path.join(home, ".claude", "settings.json"),
       JSON.stringify({ apiKeyHelper: "broken" })
     );
-    const auth = resolveClaudeAuth(
-      {},
-      {
-        homeDir: home,
-        runHelper: () => {
-          throw new Error("helper failed");
+    expect(() =>
+      resolveClaudeAuth(
+        {},
+        {
+          homeDir: home,
+          runHelper: () => {
+            throw new Error("helper failed");
+          }
         }
-      }
+      )
+    ).toThrow(ApiKeyHelperError);
+  });
+
+  it("throws when apiKeyHelper returns a banner instead of a key", () => {
+    const home = makeHomeWithSettings({ apiKeyHelper: "noisy" });
+    expect(() =>
+      resolveClaudeAuth(
+        {},
+        {
+          homeDir: home,
+          allowCredentialsFile: false,
+          runHelper: () => "Logged in to vault\nsk-ant-real-key"
+        }
+      )
+    ).toThrow(/multiple lines/);
+  });
+});
+
+describe("validateHelperCredential", () => {
+  it("accepts a single ASCII token", () => {
+    expect(validateHelperCredential(" sk-ant-ok \n")).toEqual({
+      ok: true,
+      credential: "sk-ant-ok"
+    });
+  });
+
+  it("rejects empty output", () => {
+    expect(validateHelperCredential("   ").ok).toBe(false);
+  });
+});
+
+describe("resolveClaudeConfigDir", () => {
+  it("uses ~/.claude by default", () => {
+    expect(resolveClaudeConfigDir("/tmp/home", {})).toBe(path.join("/tmp/home", ".claude"));
+  });
+
+  it("prefers CLAUDE_CONFIG_DIR when set", () => {
+    expect(resolveClaudeConfigDir("/tmp/home", { CLAUDE_CONFIG_DIR: "/custom/claude" })).toBe(
+      path.resolve("/custom/claude")
     );
-    expect(auth.source).toBe("~/.claude/.credentials.json");
-    expect(auth.authToken).toBe("sk-ant-oat-fallback");
   });
 });
 
@@ -292,6 +391,18 @@ describe("readClaudeSettings", () => {
     );
     const settings = readClaudeSettings({ homeDir: home, cwd });
     expect(settings.env).toEqual({ A: "user", B: "project", C: "local" });
+  });
+});
+
+describe("formatAuthError", () => {
+  it("appends auth diagnostics without secrets", () => {
+    expect(
+      formatAuthError(new Error("401 API key is invalid"), {
+        mode: "api_key",
+        apiKey: "sk-secret",
+        source: "~/.claude/settings.json#apiKeyHelper"
+      })
+    ).toBe("401 API key is invalid (auth: api_key via ~/.claude/settings.json#apiKeyHelper)");
   });
 });
 

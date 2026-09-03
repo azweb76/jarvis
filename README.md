@@ -21,8 +21,11 @@ Jarvis resolves Claude credentials in this order:
 1. `ANTHROPIC_API_KEY` — Anthropic Console API key
 2. `CLAUDE_CODE_OAUTH_TOKEN` — long-lived OAuth token from `claude setup-token` (Pro/Max/Team/Enterprise)
 3. `ANTHROPIC_AUTH_TOKEN` — bearer token for an LLM gateway/proxy
-4. `apiKeyHelper` from Claude Code settings (user / project / local `settings.json`)
-5. Local Claude Code login at `~/.claude/.credentials.json` (from `claude` `/login`)
+4. The same three keys from Claude settings `env` blocks (when unset in the process)
+5. `apiKeyHelper` from Claude Code settings (user / project / local `settings.json`)
+6. Local Claude Code login at `.credentials.json` under the Claude config dir (from `claude` `/login`)
+
+User settings and credentials are read from `~/.claude/` (or `CLAUDE_CONFIG_DIR` when set).
 
 Generate a setup token:
 
@@ -41,15 +44,17 @@ Or use Claude Code's `apiKeyHelper` (same setting Claude Code reads):
 }
 ```
 
-Jarvis runs that command through `/bin/sh`, caches stdout for 5 minutes by default (override with `CLAUDE_CODE_API_KEY_HELPER_TTL_MS`), and prefers local/project settings over user settings when they set `apiKeyHelper`.
+Jarvis runs that command through `/bin/sh`, passes merged settings `env` into the helper, caches stdout for 5 minutes by default (override with `CLAUDE_CODE_API_KEY_HELPER_TTL_MS`), and prefers local/project settings over user settings when they set `apiKeyHelper`. The helper must print **only** the credential (single printable-ASCII token). A configured helper that fails or prints a banner/log line surfaces as an `apiKeyHelper is failing` error instead of a generic 401.
 
-Optional: `CLAUDE_MODEL` overrides the default model id.
-
-Inspect the active auth mode (never returns secrets):
+If chat still returns `FAULT · 401 … API key is invalid`, check which credential Jarvis actually used:
 
 ```bash
 curl http://localhost:3000/api/auth
 ```
+
+A stale `ANTHROPIC_API_KEY` in your shell or `.env` overrides `apiKeyHelper`. Unset it if you intend to use the helper. 401 responses now include `(auth: … via …)` so the active source is visible in the UI.
+
+Optional: `CLAUDE_MODEL` overrides the default model id.
 
 ## Features implemented
 
@@ -86,7 +91,7 @@ Then open `http://localhost:3000`.
 - `GET /api/state`
   - returns memory/history/agent list
 - `GET /api/auth`
-  - returns `{ "mode": "api_key" | "claude_code_oauth" | "auth_token", "source": "…" }`
+  - returns `{ "mode", "source", "apiKeyHelperConfigured", "apiKeyHelperSourcePath", "configDirs", "envOverridesHelper" }` (never secrets)
 - `GET /api/agents/:agentId/messages`
   - returns inbox and outbox for an agent
 - `POST /api/agents/messages`
