@@ -2,13 +2,17 @@ import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
+import { useState } from "react";
 import { ChatPanel } from "./components/ChatPanel";
 import { DataPanel } from "./components/DataPanel";
+import { GithubPanel } from "./components/GithubPanel";
 import { HudShell } from "./components/HudShell";
 import { ProjectPanel } from "./components/ProjectPanel";
 import { TaskPanel } from "./components/TaskPanel";
 
 export function App() {
+  const [repoPath, setRepoPath] = useState("");
+
   return (
     <HudShell>
       <Container
@@ -26,8 +30,11 @@ export function App() {
           <Grid size={{ xs: 12, md: 5 }} sx={{ display: "flex" }}>
             <TaskPanel />
           </Grid>
-          <Grid size={{ xs: 12 }} sx={{ display: "flex" }}>
-            <ProjectPanel />
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex" }}>
+            <GithubPanel onRepoPath={setRepoPath} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex" }}>
+            <ProjectPanel repoPath={repoPath} onRepoPathChange={setRepoPath} />
           </Grid>
           <Grid size={{ xs: 12 }} sx={{ display: "flex" }}>
             <DataPanel />

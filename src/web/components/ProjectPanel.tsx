@@ -32,8 +32,12 @@ interface ProjectSession {
 
 const phases = ["brainstorm", "plan", "implement", "verify", "loop", "done"] as const;
 
-export function ProjectPanel() {
-  const [repoPath, setRepoPath] = useState("");
+interface ProjectPanelProps {
+  repoPath: string;
+  onRepoPathChange: (repoPath: string) => void;
+}
+
+export function ProjectPanel({ repoPath, onRepoPathChange }: ProjectPanelProps) {
   const [goal, setGoal] = useState("");
   const [session, setSession] = useState<ProjectSession | null>(null);
   const [sessions, setSessions] = useState<ProjectSession[]>([]);
@@ -132,7 +136,7 @@ export function ProjectPanel() {
             <TextField
               label="Repo path"
               value={repoPath}
-              onChange={(event) => setRepoPath(event.target.value)}
+              onChange={(event) => onRepoPathChange(event.target.value)}
               disabled={busy}
               required
               fullWidth
@@ -181,9 +185,7 @@ export function ProjectPanel() {
             <Typography variant="body2" sx={{ fontFamily: '"Share Tech Mono", monospace' }}>
               {session.worktreePath}
             </Typography>
-            {session.advice ? (
-              <Detail label="Advice" text={session.advice} />
-            ) : null}
+            {session.advice ? <Detail label="Advice" text={session.advice} /> : null}
             {session.plan ? <Detail label="Plan" text={session.plan} /> : null}
             {session.implementationNotes ? (
               <Detail label="Implement" text={session.implementationNotes} />

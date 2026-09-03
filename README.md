@@ -70,6 +70,9 @@ Optional: `ANTHROPIC_BASE_URL` routes requests through an LLM gateway/proxy (sam
 
 `GET /api/auth` reports the active `baseUrl` and `baseUrlSource` when one is configured.
 
+Optional: `GITHUB_TOKEN` enables GitHub repository search and clone (HUD + chat + `/api/github/*`).
+Optional: `JARVIS_REPOS_DIR` sets where clones land (default `./data/repos`).
+
 ## Features implemented
 
 - Chat with a friendly personal assistant ("greeter" agent)
@@ -85,6 +88,10 @@ Optional: `ANTHROPIC_BASE_URL` routes requests through an LLM gateway/proxy (sam
   - creates an isolated `git worktree` + branch under `../.jarvis-worktrees/<repo>/<session>`
   - chat intents: `help me work on /path/to/repo: …`, `keep going`, `project status`
   - HTTP APIs to start/advance/loop/commit sessions and inspect worktrees
+- GitHub repo lookup/clone (`GITHUB_TOKEN`):
+  - live search in the HUD (debounced, abortable, short TTL cache)
+  - clone into `JARVIS_REPOS_DIR` (default `data/repos/<owner>/<repo>`) and fill the workshop repo path
+  - chat intents: `search github for …`, `lookup github owner/repo`, `clone owner/repo`
 - Agent-to-agent communication with `sendMessage` on a message bus
   - structured message envelope: `priority`, `correlationId`, `taskId`, `ttlMs`
 - Task assignment endpoint: assign tasks to specific agents
@@ -142,6 +149,16 @@ Then open `http://localhost:3000`.
   - body: `{ "message": "optional commit message" }`
 - `GET /api/git/worktrees?repoPath=/path/to/repo`
   - repo snapshot + `git worktree list`
+- `GET /api/github/status`
+  - `{ configured, reposDir, apiBase }` (never the token)
+- `GET /api/github/search?q=…&perPage=8`
+  - GitHub repository search (requires `GITHUB_TOKEN`)
+- `GET /api/github/repos/:owner/:repo`
+  - lookup one repository
+- `POST /api/github/clone`
+  - body: `{ "fullName": "owner/repo", "destination": "optional/path" }`
+- `GET /api/github/cloned`
+  - list local clones under `JARVIS_REPOS_DIR`
 
 ## Backlog
 
