@@ -220,16 +220,17 @@ export const cloneGithubRepo = async (
   }
 
   fs.mkdirSync(path.dirname(destination), { recursive: true });
-  const cloneUrl = `https://github.com/${parsed.owner}/${parsed.repo}.git`;
+  const publicCloneUrl = `https://github.com/${parsed.owner}/${parsed.repo}.git`;
+  // Prefer tokenized HTTPS URL — works for classic PATs, fine-grained tokens,
+  // and GitHub App installation tokens (bearer extraHeader alone often fails for ghs_*).
+  const authedCloneUrl = `https://x-access-token:${token}@github.com/${parsed.owner}/${parsed.repo}.git`;
   const result = await runProcess("git", {
     cwd: path.dirname(destination),
     args: [
-      "-c",
-      `http.extraHeader=AUTHORIZATION: bearer ${token}`,
       "clone",
       "--filter=blob:none",
       "--single-branch",
-      cloneUrl,
+      authedCloneUrl,
       destination
     ],
     timeoutMs: options.timeoutMs ?? 120_000,
@@ -243,6 +244,14 @@ export const cloneGithubRepo = async (
       "clone_failed"
     );
   }
+
+  // Scrub the token from the stored remote URL.
+  await runProcess("git", {
+    cwd: destination,
+    args: ["remote", "set-url", "origin", publicCloneUrl],
+    timeoutMs: 10_000,
+    env: { ...env, GIT_TERMINAL_PROMPT: "0" }
+  }).catch(() => undefined);
 
   return { fullName: name, path: destination, alreadyExisted: false };
 };
