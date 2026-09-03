@@ -21,7 +21,8 @@ Jarvis resolves Claude credentials in this order:
 1. `ANTHROPIC_API_KEY` — Anthropic Console API key
 2. `CLAUDE_CODE_OAUTH_TOKEN` — long-lived OAuth token from `claude setup-token` (Pro/Max/Team/Enterprise)
 3. `ANTHROPIC_AUTH_TOKEN` — bearer token for an LLM gateway/proxy
-4. Local Claude Code login at `~/.claude/.credentials.json` (from `claude` `/login`)
+4. `apiKeyHelper` from Claude Code settings (user / project / local `settings.json`)
+5. Local Claude Code login at `~/.claude/.credentials.json` (from `claude` `/login`)
 
 Generate a setup token:
 
@@ -30,6 +31,17 @@ claude setup-token
 export CLAUDE_CODE_OAUTH_TOKEN="…"
 pnpm dev
 ```
+
+Or use Claude Code's `apiKeyHelper` (same setting Claude Code reads):
+
+```json
+// ~/.claude/settings.json
+{
+  "apiKeyHelper": "op read 'op://Personal/Anthropic/credential'"
+}
+```
+
+Jarvis runs that command through `/bin/sh`, caches stdout for 5 minutes by default (override with `CLAUDE_CODE_API_KEY_HELPER_TTL_MS`), and prefers local/project settings over user settings when they set `apiKeyHelper`.
 
 Optional: `CLAUDE_MODEL` overrides the default model id.
 
