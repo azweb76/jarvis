@@ -3,6 +3,8 @@ const chatInput = document.querySelector<HTMLInputElement>("#chat-input");
 const chatLog = document.querySelector<HTMLDivElement>("#chat-log");
 const taskForm = document.querySelector<HTMLFormElement>("#task-form");
 const taskOutput = document.querySelector<HTMLPreElement>("#task-output");
+const messagesForm = document.querySelector<HTMLFormElement>("#messages-form");
+const messagesOutput = document.querySelector<HTMLPreElement>("#messages-output");
 
 const appendLine = (text: string) => {
   if (!chatLog) return;
@@ -41,5 +43,16 @@ taskForm?.addEventListener("submit", async (event) => {
   const data = await response.json();
   if (taskOutput) {
     taskOutput.textContent = JSON.stringify(data, null, 2);
+  }
+});
+
+messagesForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const agentId = (document.querySelector<HTMLInputElement>("#messages-agent-id")?.value ?? "").trim();
+  if (!agentId) return;
+  const response = await fetch(`/api/agents/${agentId}/messages`);
+  const data = await response.json();
+  if (messagesOutput) {
+    messagesOutput.textContent = JSON.stringify(data, null, 2);
   }
 });

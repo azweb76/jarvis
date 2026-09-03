@@ -1,17 +1,18 @@
 import { createCoreAgents } from "./agents.js";
-import type { AgentReply, AgentTask, ChatMessage, ClaudeClient } from "./types.js";
-import { MemoryStore } from "./memory.js";
 import { MessageBus } from "./message-bus.js";
+import { PersistentMemoryStore } from "./persistent-memory.js";
 import { SkillRegistry } from "./skills.js";
+import type { AgentReply, AgentTask, ChatMessage, ClaudeClient } from "./types.js";
 
 export class JarvisRuntime {
-  private readonly memory = new MemoryStore();
+  private readonly memory: PersistentMemoryStore;
   private readonly skills = new SkillRegistry();
   private readonly messageBus = new MessageBus();
   private readonly agents: ReturnType<typeof createCoreAgents>;
   private readonly history: ChatMessage[] = [];
 
-  constructor(claudeClient: ClaudeClient) {
+  constructor(claudeClient: ClaudeClient, memoryDbPath = `${process.cwd()}/data/jarvis-memory.db`) {
+    this.memory = new PersistentMemoryStore(memoryDbPath);
     this.agents = createCoreAgents(claudeClient);
   }
 
@@ -33,11 +34,24 @@ export class JarvisRuntime {
     return { agentId: agent.id, text: outcome };
   }
 
-  getState(): { memory: Record<string, string>; history: ChatMessage[]; agents: string[] } {
+  getAgentMessages(agentId: string) {
+    return {
+      inbox: this.messageBus.inbox(agentId),
+      outbox: this.messageBus.outbox(agentId)
+    };
+  }
+
+  getState(): {
+    memory: Record<string, string>;
+    history: ChatMessage[];
+    agents: string[];
+    messages: ReturnType<MessageBus["all"]>;
+  } {
     return {
       memory: this.memory.snapshot(),
       history: this.history,
-      agents: this.agents.map((agent) => agent.id)
+      agents: this.agents.map((agent) => agent.id),
+      messages: this.messageBus.all()
     };
   }
 

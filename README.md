@@ -22,8 +22,10 @@ It uses ESM modules, pnpm, and Vitest.
 - Agent-to-agent communication with `sendMessage` on a message bus
 - Task assignment endpoint: assign tasks to specific agents
 - Self-improvement primitives:
-  - Memory store for persistent context in runtime
+  - SQLite-backed memory store for persistent context in runtime
   - Skill notes registry that evolves with interactions
+- Agent message visibility:
+  - inspect per-agent inbox/outbox traffic from the UI
 
 ## Run
 
@@ -42,6 +44,8 @@ Then open `http://localhost:3000`.
   - body: `{ "title": "task", "prompt": "details" }`
 - `GET /api/state`
   - returns memory/history/agent list
+- `GET /api/agents/:agentId/messages`
+  - returns inbox and outbox for an agent
 
 ## Backlog
 

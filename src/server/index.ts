@@ -46,6 +46,15 @@ app.get("/api/state", (_req, res) => {
   res.json(runtime.getState());
 });
 
+app.get("/api/agents/:agentId/messages", (req, res) => {
+  try {
+    const { agentId } = req.params;
+    return res.json(runtime.getAgentMessages(agentId));
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
 const start = async () => {
   if (isDev) {
     const vite = await createViteServer({

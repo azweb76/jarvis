@@ -15,4 +15,12 @@ export class MessageBus {
   inbox(agentId: string): AgentMessage[] {
     return this.messages.filter((message) => message.to === agentId);
   }
+
+  outbox(agentId: string): AgentMessage[] {
+    return this.messages.filter((message) => message.from === agentId);
+  }
+
+  all(): AgentMessage[] {
+    return [...this.messages];
+  }
 }
