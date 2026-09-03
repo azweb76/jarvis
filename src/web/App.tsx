@@ -11,7 +11,11 @@ export function App() {
     <HudShell>
       <Container
         maxWidth="lg"
-        sx={{ px: { xs: 2, md: 4 }, pb: { xs: 4, md: 6 }, overflow: "visible" }}
+        sx={{
+          px: { xs: 2.5, sm: 3, md: 4 },
+          pb: { xs: 5, md: 6 },
+          boxSizing: "border-box"
+        }}
       >
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 7 }} sx={{ display: "flex" }}>
