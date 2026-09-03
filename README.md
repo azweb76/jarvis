@@ -8,6 +8,7 @@ It uses ESM modules, pnpm, and Vitest.
 - TypeScript
 - Node + Express
 - Claude SDK (`@anthropic-ai/sdk`) with preconfigured auth via `ANTHROPIC_API_KEY`
+- React + Material UI v9 (light/dark/system color schemes)
 - Vite for frontend SPA assets
 - Vitest for tests
 - pnpm for package management
