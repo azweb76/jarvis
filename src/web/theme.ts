@@ -5,19 +5,19 @@ const sharedTypography = {
   h1: {
     fontFamily: '"Orbitron", "Rajdhani", sans-serif',
     fontWeight: 700,
-    letterSpacing: "0.18em",
+    letterSpacing: "0.14em",
     textTransform: "uppercase" as const
   },
   h2: {
     fontFamily: '"Orbitron", "Rajdhani", sans-serif',
     fontWeight: 600,
-    letterSpacing: "0.12em",
+    letterSpacing: "0.1em",
     textTransform: "uppercase" as const
   },
   h6: {
     fontFamily: '"Orbitron", "Rajdhani", sans-serif',
     fontWeight: 600,
-    letterSpacing: "0.14em",
+    letterSpacing: "0.1em",
     textTransform: "uppercase" as const
   },
   overline: {

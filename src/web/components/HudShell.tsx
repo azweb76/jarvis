@@ -33,9 +33,12 @@ export function HudHeader() {
           <Typography
             variant="h1"
             sx={{
-              fontSize: { xs: "2.4rem", sm: "3.4rem", md: "4.2rem" },
-              lineHeight: 1,
-              color: "primary.main"
+              fontSize: { xs: "2.2rem", sm: "3.2rem", md: "3.8rem" },
+              lineHeight: 1.05,
+              letterSpacing: { xs: "0.1em", md: "0.14em" },
+              pr: "0.14em",
+              color: "primary.main",
+              overflow: "visible"
             }}
           >
             Jarvis
@@ -64,9 +67,9 @@ export function HudHeader() {
 
 export function HudShell({ children }: { children: ReactNode }) {
   return (
-    <Box sx={{ position: "relative", minHeight: "100vh" }}>
+    <Box sx={{ position: "relative", minHeight: "100vh", overflowX: "hidden" }}>
       <HudAtmosphere />
-      <Box sx={{ position: "relative", zIndex: 1 }}>
+      <Box sx={{ position: "relative", zIndex: 1, overflow: "visible" }}>
         <HudHeader />
         {children}
       </Box>

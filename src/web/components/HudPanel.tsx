@@ -17,35 +17,34 @@ export function HudPanel({ title, code, children, delayMs = 0 }: HudPanelProps) 
         {
           position: "relative",
           height: "100%",
-          p: { xs: 2, md: 2.5 },
-          clipPath:
-            "polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))",
+          overflow: "visible",
+          p: { xs: 2.25, md: 2.75 },
           bgcolor: "background.paper",
           border: "1px solid",
           borderColor: "divider",
+          borderRadius: 1,
           backdropFilter: "blur(10px)",
           animation: "hudFadeUp 0.7s ease both",
           animationDelay: `${delayMs}ms`,
-          "&::before": {
+          "&::before, &::after": {
             content: '""',
             position: "absolute",
-            top: 0,
-            right: 0,
-            width: 18,
-            height: 18,
+            width: 16,
+            height: 16,
+            pointerEvents: "none"
+          },
+          "&::before": {
+            top: -1,
+            left: -1,
             borderTop: "2px solid",
-            borderRight: "2px solid",
+            borderLeft: "2px solid",
             borderColor: "primary.main"
           },
           "&::after": {
-            content: '""',
-            position: "absolute",
-            left: 0,
-            bottom: 0,
-            width: 18,
-            height: 18,
+            right: -1,
+            bottom: -1,
+            borderRight: "2px solid",
             borderBottom: "2px solid",
-            borderLeft: "2px solid",
             borderColor: "primary.main"
           }
         },
@@ -57,6 +56,7 @@ export function HudPanel({ title, code, children, delayMs = 0 }: HudPanelProps) 
     >
       <Stack
         direction="row"
+        spacing={2}
         sx={{ mb: 2, alignItems: "baseline", justifyContent: "space-between" }}
       >
         <Typography variant="h6" sx={{ fontSize: "0.95rem" }}>
@@ -65,7 +65,7 @@ export function HudPanel({ title, code, children, delayMs = 0 }: HudPanelProps) 
         <Typography
           variant="overline"
           color="primary"
-          sx={{ lineHeight: 1, opacity: 0.85 }}
+          sx={{ lineHeight: 1, opacity: 0.85, flexShrink: 0 }}
         >
           {code}
         </Typography>

@@ -9,7 +9,10 @@ import { TaskPanel } from "./components/TaskPanel";
 export function App() {
   return (
     <HudShell>
-      <Container maxWidth="lg" sx={{ px: { xs: 2, md: 4 }, pb: { xs: 4, md: 6 } }}>
+      <Container
+        maxWidth="lg"
+        sx={{ px: { xs: 2, md: 4 }, pb: { xs: 4, md: 6 }, overflow: "visible" }}
+      >
         <Grid container spacing={2.5} sx={{ alignItems: "stretch" }}>
           <Grid size={{ xs: 12, md: 7 }}>
             <ChatPanel />
