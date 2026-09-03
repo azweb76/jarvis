@@ -13,11 +13,11 @@ export function App() {
         maxWidth="lg"
         sx={{ px: { xs: 2, md: 4 }, pb: { xs: 4, md: 6 }, overflow: "visible" }}
       >
-        <Grid container spacing={2.5} sx={{ alignItems: "stretch" }}>
-          <Grid size={{ xs: 12, md: 7 }}>
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, md: 7 }} sx={{ display: "flex" }}>
             <ChatPanel />
           </Grid>
-          <Grid size={{ xs: 12, md: 5 }}>
+          <Grid size={{ xs: 12, md: 5 }} sx={{ display: "flex" }}>
             <TaskPanel />
           </Grid>
         </Grid>

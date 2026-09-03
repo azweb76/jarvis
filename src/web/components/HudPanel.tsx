@@ -10,13 +10,50 @@ interface HudPanelProps {
   delayMs?: number;
 }
 
+function Corner({
+  top,
+  left,
+  right,
+  bottom
+}: {
+  top?: boolean;
+  left?: boolean;
+  right?: boolean;
+  bottom?: boolean;
+}) {
+  return (
+    <Box
+      aria-hidden
+      sx={{
+        position: "absolute",
+        width: 14,
+        height: 14,
+        top: top ? -1 : "auto",
+        bottom: bottom ? -1 : "auto",
+        left: left ? -1 : "auto",
+        right: right ? -1 : "auto",
+        borderTop: top ? "2px solid" : "none",
+        borderBottom: bottom ? "2px solid" : "none",
+        borderLeft: left ? "2px solid" : "none",
+        borderRight: right ? "2px solid" : "none",
+        borderColor: "primary.main",
+        pointerEvents: "none"
+      }}
+    />
+  );
+}
+
 export function HudPanel({ title, code, children, delayMs = 0 }: HudPanelProps) {
   return (
     <Box
       sx={[
         {
           position: "relative",
-          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          width: "100%",
+          minHeight: 0,
           overflow: "visible",
           p: { xs: 2.25, md: 2.75 },
           bgcolor: "background.paper",
@@ -25,28 +62,7 @@ export function HudPanel({ title, code, children, delayMs = 0 }: HudPanelProps) 
           borderRadius: 1,
           backdropFilter: "blur(10px)",
           animation: "hudFadeUp 0.7s ease both",
-          animationDelay: `${delayMs}ms`,
-          "&::before, &::after": {
-            content: '""',
-            position: "absolute",
-            width: 16,
-            height: 16,
-            pointerEvents: "none"
-          },
-          "&::before": {
-            top: -1,
-            left: -1,
-            borderTop: "2px solid",
-            borderLeft: "2px solid",
-            borderColor: "primary.main"
-          },
-          "&::after": {
-            right: -1,
-            bottom: -1,
-            borderRight: "2px solid",
-            borderBottom: "2px solid",
-            borderColor: "primary.main"
-          }
+          animationDelay: `${delayMs}ms`
         },
         (theme) =>
           theme.applyStyles("dark", {
@@ -54,6 +70,10 @@ export function HudPanel({ title, code, children, delayMs = 0 }: HudPanelProps) 
           })
       ]}
     >
+      <Corner top left />
+      <Corner top right />
+      <Corner bottom left />
+      <Corner bottom right />
       <Stack
         direction="row"
         spacing={2}
@@ -70,7 +90,9 @@ export function HudPanel({ title, code, children, delayMs = 0 }: HudPanelProps) 
           {code}
         </Typography>
       </Stack>
-      {children}
+      <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+        {children}
+      </Box>
     </Box>
   );
 }

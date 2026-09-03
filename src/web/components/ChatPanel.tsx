@@ -56,14 +56,14 @@ export function ChatPanel() {
 
   return (
     <HudPanel title="Voice link" code="CH-01" delayMs={80}>
-      <Stack spacing={2} sx={{ height: "100%" }}>
+      <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
         <Box
           ref={logRef}
           sx={[
             {
-              flex: 1,
-              minHeight: 260,
-              maxHeight: 440,
+              flex: "1 1 auto",
+              minHeight: { xs: 180, md: 240 },
+              maxHeight: { xs: 320, md: 420 },
               overflowY: "auto",
               p: 2,
               border: "1px solid",

@@ -22,7 +22,7 @@ export function HudHeader() {
         spacing={2}
         sx={{ alignItems: "flex-start", justifyContent: "space-between" }}
       >
-        <Box sx={{ animation: "hudFadeUp 0.6s ease both" }}>
+        <Box sx={{ flex: "1 1 auto", minWidth: 0, animation: "hudFadeUp 0.6s ease both" }}>
           <Typography
             variant="overline"
             color="primary"
@@ -54,7 +54,7 @@ export function HudHeader() {
             Personal assistant interface. Speak freely, then route work to specialist agents.
           </Typography>
         </Box>
-        <Stack spacing={1} sx={{ alignItems: "flex-end", pt: 0.5 }}>
+        <Stack spacing={1} sx={{ alignItems: "flex-end", pt: 0.5, flexShrink: 0 }}>
           <ColorModeToggle />
           <Typography variant="overline" color="text.secondary">
             {new Date().toISOString().slice(0, 10)}
