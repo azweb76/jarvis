@@ -1,0 +1,73 @@
+import express from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createServer as createViteServer } from "vite";
+import { AnthropicClaudeClient } from "../core/claude-client.js";
+import { JarvisRuntime } from "../core/jarvis.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(__dirname, "../..");
+const isDev = process.env.NODE_ENV !== "production";
+
+const app = express();
+app.use(express.json());
+
+const runtime = new JarvisRuntime(new AnthropicClaudeClient());
+
+app.post("/api/chat", async (req, res) => {
+  try {
+    const message = String(req.body?.message ?? "").trim();
+    if (!message) {
+      return res.status(400).json({ error: "message is required" });
+    }
+    const response = await runtime.chat(message);
+    return res.json(response);
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+app.post("/api/agents/:agentId/tasks", async (req, res) => {
+  try {
+    const { agentId } = req.params;
+    const title = String(req.body?.title ?? "").trim();
+    const prompt = String(req.body?.prompt ?? "").trim();
+    if (!title || !prompt) {
+      return res.status(400).json({ error: "title and prompt are required" });
+    }
+    const response = await runtime.assignTask(agentId, { title, prompt });
+    return res.json(response);
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+app.get("/api/state", (_req, res) => {
+  res.json(runtime.getState());
+});
+
+const start = async () => {
+  if (isDev) {
+    const vite = await createViteServer({
+      root: path.join(rootDir, "src/web"),
+      server: { middlewareMode: true },
+      appType: "spa"
+    });
+    app.use(vite.middlewares);
+  } else {
+    app.use(express.static(path.join(rootDir, "dist/client")));
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(rootDir, "dist/client/index.html"));
+    });
+  }
+
+  const port = Number(process.env.PORT ?? 3000);
+  app.listen(port, () => {
+    console.log(`Jarvis running on http://localhost:${port}`);
+  });
+};
+
+start().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
