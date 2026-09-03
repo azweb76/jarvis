@@ -2,11 +2,8 @@
 
 ## P0 - Core reliability and capability
 
-1. Persist memory and skill notes to durable storage (SQLite/Postgres/Redis).
-2. Add streaming chat responses and partial token rendering.
-3. Add stronger agent orchestration policy (routing, retries, fallback agent).
-4. Add local backup/export for memory and skills data.
-5. Add lightweight guardrails and validation policies for inter-agent messages.
+1. Add streaming chat responses and partial token rendering.
+2. Add stronger agent orchestration policy (routing, retries, fallback agent).
 
 ## P1 - Better assistant experience
 
@@ -19,6 +16,9 @@
 
 ## Recently completed
 
+- Persist memory and skill notes to SQLite
+- Local backup/export for memory and skills (download JSON, write `data/backups/`, restore)
+- Lightweight guardrails for inter-agent messages (agent ids, content length, priority, TTL, refs)
 - Structured `SendMessage` envelopes with `priority`, `correlationId`, `taskId`, and `ttlMs`
 - Project workshop with git worktrees: brainstorm → plan → implement → verify → loop
 

@@ -1,5 +1,8 @@
+import path from "node:path";
 import { createCoreAgents } from "./agents.js";
+import type { JarvisBackup } from "./durable-store.js";
 import { MessageBus, type AgentMessage } from "./message-bus.js";
+import { assertValidAgentMessage, MessagePolicyError } from "./message-guardrails.js";
 import { PersistentMemoryStore } from "./persistent-memory.js";
 import { parseProjectIntent } from "./project-intent.js";
 import { ProjectSessionStore } from "./project-store.js";
@@ -14,24 +17,30 @@ import type {
   SendMessageOptions
 } from "./types.js";
 
+export { MessagePolicyError };
+
 export class JarvisRuntime {
   private readonly memory: PersistentMemoryStore;
-  private readonly skills = new SkillRegistry();
+  private readonly skills: SkillRegistry;
   private readonly messageBus = new MessageBus();
   private readonly agents: ReturnType<typeof createCoreAgents>;
   private readonly history: ChatMessage[] = [];
   private readonly projectStore: ProjectSessionStore;
   private readonly workshop: ProjectWorkshop;
+  private readonly backupDir: string;
 
   constructor(
     claudeClient: ClaudeClient,
     memoryDbPath = `${process.cwd()}/data/jarvis-memory.db`,
+    backupDir = `${process.cwd()}/data/backups`,
     projectsDbPath = `${process.cwd()}/data/jarvis-projects.db`
   ) {
     this.memory = new PersistentMemoryStore(memoryDbPath);
+    this.skills = new SkillRegistry(this.memory);
     this.projectStore = new ProjectSessionStore(projectsDbPath);
     this.agents = createCoreAgents(claudeClient);
     this.workshop = new ProjectWorkshop(this.agents, () => this.makeContext(), this.projectStore);
+    this.backupDir = backupDir;
   }
 
   async chat(input: string): Promise<AgentReply> {
@@ -103,30 +112,59 @@ export class JarvisRuntime {
     return this.workshop.listWorktrees(repoPath);
   }
 
-  sendAgentMessage(fromAgentId: string, toAgentId: string, content: string, options?: SendMessageOptions): void {
-    this.messageBus.send(fromAgentId, toAgentId, content, options);
+  sendAgentMessage(
+    fromAgentId: string,
+    toAgentId: string,
+    content: string,
+    options?: SendMessageOptions
+  ): AgentMessage {
+    const guarded = assertValidAgentMessage(
+      fromAgentId,
+      toAgentId,
+      content,
+      this.agentIds(),
+      options
+    );
+    return this.messageBus.send(guarded.fromAgentId, guarded.toAgentId, guarded.content, guarded.options);
   }
 
   getAgentMessages(agentId: string): { inbox: AgentMessage[]; outbox: AgentMessage[] } {
+    this.getAgent(agentId);
     return {
       inbox: this.messageBus.inbox(agentId),
       outbox: this.messageBus.outbox(agentId)
     };
   }
 
+  exportBackup(): JarvisBackup {
+    return this.memory.exportBackup();
+  }
+
+  importBackup(backup: unknown): JarvisBackup {
+    return this.memory.importBackup(backup);
+  }
+
+  writeLocalBackup(): { path: string; backup: JarvisBackup } {
+    return this.memory.writeLocalBackup(this.backupDir);
+  }
+
   getState(): {
     memory: Record<string, string>;
+    skills: Record<string, string[]>;
     history: ChatMessage[];
     agents: string[];
     messages: ReturnType<MessageBus["all"]>;
     projects: ProjectSession[];
+    backupDir: string;
   } {
     return {
       memory: this.memory.snapshot(),
+      skills: this.skills.snapshot(),
       history: this.history,
-      agents: this.agents.map((agent) => agent.id),
+      agents: this.agentIds(),
       messages: this.messageBus.all(),
-      projects: this.workshop.listSessions()
+      projects: this.workshop.listSessions(),
+      backupDir: path.resolve(this.backupDir)
     };
   }
 
@@ -178,10 +216,14 @@ export class JarvisRuntime {
     this.memory.set("project.latestSummary", this.workshop.summarize(session));
   }
 
+  private agentIds(): string[] {
+    return this.agents.map((agent) => agent.id);
+  }
+
   private getAgent(agentId: string) {
     const agent = this.agents.find((candidate) => candidate.id === agentId);
     if (!agent) {
-      throw new Error(`Unknown agent: ${agentId}`);
+      throw new MessagePolicyError("unknown_agent", `Unknown agent: ${agentId}`);
     }
     return agent;
   }
@@ -198,7 +240,7 @@ export class JarvisRuntime {
         content: string,
         options?: SendMessageOptions
       ) => {
-        this.messageBus.send(fromAgentId, toAgentId, content, options);
+        this.sendAgentMessage(fromAgentId, toAgentId, content, options);
       }
     };
   }

@@ -89,8 +89,10 @@ Optional: `ANTHROPIC_BASE_URL` routes requests through an LLM gateway/proxy (sam
   - structured message envelope: `priority`, `correlationId`, `taskId`, `ttlMs`
 - Task assignment endpoint: assign tasks to specific agents
 - Self-improvement primitives:
-  - SQLite-backed memory store for persistent context in runtime
+  - SQLite-backed memory **and skill notes** (same local database)
   - Skill notes registry that evolves with interactions
+- Local backup/export of memory and skills (`GET /api/data/export`, `POST /api/data/backup`, `POST /api/data/import`) plus HUD archive controls
+- Inter-agent message guardrails: known agents only, content/TTL/priority/id validation
 - Agent message APIs:
   - inspect per-agent inbox/outbox and send structured agent messages via HTTP
   - React HUD UI for inbox/outbox is not ported yet
@@ -111,7 +113,7 @@ Then open `http://localhost:3000`.
 - `POST /api/agents/:agentId/tasks`
   - body: `{ "title": "task", "prompt": "details" }`
 - `GET /api/state`
-  - returns memory/history/agent list/project sessions
+  - returns memory, skills, history, agents, message bus snapshot, project sessions, and backupDir
 - `GET /api/auth`
   - returns `{ "mode", "source", "baseUrl", "baseUrlSource", "apiKeyHelperConfigured", "apiKeyHelperSourcePath", "configDirs", "envOverridesHelper" }` (never secrets)
 - `GET /api/agents/:agentId/messages`
@@ -119,6 +121,13 @@ Then open `http://localhost:3000`.
 - `POST /api/agents/messages`
   - send a structured message between agents
   - body: `{ "fromAgentId": "planner", "toAgentId": "memory", "content": "note", "priority": "high", "correlationId": "corr-1", "taskId": "task-9", "ttlMs": 60000 }`
+  - unknown agents, empty/oversized content, invalid priority/TTL/ids return `400`
+- `GET /api/data/export`
+  - download a JSON backup of memory and skill notes
+- `POST /api/data/backup`
+  - write a timestamped JSON snapshot under `data/backups/`
+- `POST /api/data/import`
+  - restore from a backup object (`{ "version": 1, "exportedAt": …, "memory": {…}, "skills": {…} }`)
 - `GET /api/projects`
   - list project workshop sessions
 - `POST /api/projects`

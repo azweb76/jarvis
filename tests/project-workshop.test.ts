@@ -134,7 +134,7 @@ describe("project helpers", () => {
 describe("JarvisRuntime project workshop", () => {
   it("starts a session with worktree, brainstorm, and plan", async () => {
     const repo = createProjectRepo();
-    const runtime = new JarvisRuntime(new WorkshopClaudeClient(), createDbPath(), createDbPath());
+    const runtime = new JarvisRuntime(new WorkshopClaudeClient(), createDbPath(), createDbPath(), createDbPath());
     const session = await runtime.startProject({
       repoPath: repo,
       goal: "Add a short README note"
@@ -152,7 +152,7 @@ describe("JarvisRuntime project workshop", () => {
 
   it("implements in the worktree, verifies, and can commit", async () => {
     const repo = createProjectRepo();
-    const runtime = new JarvisRuntime(new WorkshopClaudeClient(), createDbPath(), createDbPath());
+    const runtime = new JarvisRuntime(new WorkshopClaudeClient(), createDbPath(), createDbPath(), createDbPath());
     const started = await runtime.startProject({
       repoPath: repo,
       goal: "Add a short README note"
@@ -178,7 +178,7 @@ describe("JarvisRuntime project workshop", () => {
 
   it("includes workshop summary when chat starts a project", async () => {
     const repo = createProjectRepo();
-    const runtime = new JarvisRuntime(new WorkshopClaudeClient(), createDbPath(), createDbPath());
+    const runtime = new JarvisRuntime(new WorkshopClaudeClient(), createDbPath(), createDbPath(), createDbPath());
     await runtime.chat("My name is Dan");
     const reply = await runtime.chat(`help me work on ${repo}: add a short README note`);
     expect(reply.text).toContain("Session");
