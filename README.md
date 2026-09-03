@@ -25,7 +25,7 @@ Jarvis resolves Claude credentials in this order:
 5. `apiKeyHelper` from Claude Code settings (user / project / local `settings.json`)
 6. Local Claude Code login at `.credentials.json` under the Claude config dir (from `claude` `/login`)
 
-Config dirs inspected for user settings/credentials: `CLAUDE_CONFIG_DIR` if set, otherwise `~/.claude` and `~/.Claude` (capital C is accepted).
+User settings and credentials are read from `~/.claude/` (or `CLAUDE_CONFIG_DIR` when set).
 
 Generate a setup token:
 
@@ -38,7 +38,7 @@ pnpm dev
 Or use Claude Code's `apiKeyHelper` (same setting Claude Code reads):
 
 ```json
-// ~/.claude/settings.json  (also ~/.Claude/settings.json)
+// ~/.claude/settings.json
 {
   "apiKeyHelper": "op read 'op://Personal/Anthropic/credential'"
 }

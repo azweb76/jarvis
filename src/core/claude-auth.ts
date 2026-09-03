@@ -87,48 +87,27 @@ const displaySettingsPath = (filePath: string, homeDir: string): string => {
 };
 
 /**
- * Resolve Claude Code config directories under a home directory.
+ * Resolve the Claude Code config directory.
  *
- * Claude Code uses `~/.claude` (lowercase). Some setups use `~/.Claude`.
- * When `CLAUDE_CONFIG_DIR` is set, that directory is preferred (same as Claude Code).
+ * Claude Code uses `~/.claude`. When `CLAUDE_CONFIG_DIR` is set, that directory
+ * is used instead (same as Claude Code).
  */
-export const resolveClaudeConfigDirs = (
+export const resolveClaudeConfigDir = (
   homeDir = os.homedir(),
   env: NodeJS.ProcessEnv = process.env
-): string[] => {
+): string => {
   const configured = trim(env.CLAUDE_CONFIG_DIR);
   if (configured) {
-    return [path.resolve(configured)];
+    return path.resolve(configured);
   }
-
-  const candidates = [path.join(homeDir, ".claude"), path.join(homeDir, ".Claude")];
-  const existing = candidates.filter((dir) => {
-    try {
-      return fs.existsSync(dir);
-    } catch {
-      return false;
-    }
-  });
-
-  if (existing.length === 0) {
-    return [candidates[0]];
-  }
-
-  // Prefer lowercase when both exist (canonical Claude Code path).
-  const unique: string[] = [];
-  for (const dir of existing) {
-    if (!unique.includes(dir)) {
-      unique.push(dir);
-    }
-  }
-  return unique;
+  return path.join(homeDir, ".claude");
 };
 
 /**
  * Read Claude Code settings files and merge env / apiKeyHelper.
  *
  * Precedence (highest last write wins):
- * 1. User settings under Claude config dir(s) (`~/.claude` / `~/.Claude` / `CLAUDE_CONFIG_DIR`)
+ * 1. User settings at `~/.claude/settings.json` (or `CLAUDE_CONFIG_DIR/settings.json`)
  * 2. `.claude/settings.json` (project)
  * 3. `.claude/settings.local.json` (local)
  */
@@ -137,10 +116,11 @@ export const readClaudeSettings = (
 ): ClaudeSettingsSnapshot => {
   const homeDir = options.homeDir ?? os.homedir();
   const cwd = options.cwd ?? process.cwd();
-  const configDirs = resolveClaudeConfigDirs(homeDir, options.env ?? process.env);
+  const configDir = resolveClaudeConfigDir(homeDir, options.env ?? process.env);
+  const configDirs = [configDir];
 
   const files = [
-    ...configDirs.map((dir) => path.join(dir, "settings.json")),
+    path.join(configDir, "settings.json"),
     path.join(cwd, ".claude", "settings.json"),
     path.join(cwd, ".claude", "settings.local.json")
   ];
@@ -296,34 +276,31 @@ const readClaudeCodeCredentialsFile = (
   homeDir = os.homedir(),
   env: NodeJS.ProcessEnv = process.env
 ): { token: string; source: string } | undefined => {
-  const configDirs = resolveClaudeConfigDirs(homeDir, env);
-  for (const dir of configDirs) {
-    const filePath = path.join(dir, ".credentials.json");
-    if (!fs.existsSync(filePath)) {
-      continue;
-    }
-
-    try {
-      const raw = JSON.parse(fs.readFileSync(filePath, "utf8")) as {
-        claudeAiOauth?: { accessToken?: string; expiresAt?: number };
-      };
-      const accessToken = trim(raw.claudeAiOauth?.accessToken);
-      if (!accessToken) {
-        continue;
-      }
-      const expiresAt = raw.claudeAiOauth?.expiresAt;
-      if (typeof expiresAt === "number" && Number.isFinite(expiresAt) && Date.now() >= expiresAt) {
-        continue;
-      }
-      return {
-        token: accessToken,
-        source: `${displaySettingsPath(filePath, homeDir)}`
-      };
-    } catch {
-      continue;
-    }
+  const configDir = resolveClaudeConfigDir(homeDir, env);
+  const filePath = path.join(configDir, ".credentials.json");
+  if (!fs.existsSync(filePath)) {
+    return undefined;
   }
-  return undefined;
+
+  try {
+    const raw = JSON.parse(fs.readFileSync(filePath, "utf8")) as {
+      claudeAiOauth?: { accessToken?: string; expiresAt?: number };
+    };
+    const accessToken = trim(raw.claudeAiOauth?.accessToken);
+    if (!accessToken) {
+      return undefined;
+    }
+    const expiresAt = raw.claudeAiOauth?.expiresAt;
+    if (typeof expiresAt === "number" && Number.isFinite(expiresAt) && Date.now() >= expiresAt) {
+      return undefined;
+    }
+    return {
+      token: accessToken,
+      source: displaySettingsPath(filePath, homeDir)
+    };
+  } catch {
+    return undefined;
+  }
 };
 
 const mergeHelperEnv = (
@@ -367,7 +344,7 @@ const resolveFromSettingsEnv = (settingsEnv: Record<string, string>): ClaudeAuth
  * 2. `CLAUDE_CODE_OAUTH_TOKEN` — long-lived token from `claude setup-token`
  * 3. `ANTHROPIC_AUTH_TOKEN` — generic bearer token (gateway/proxy)
  * 4. Same three keys from Claude settings `env` blocks (when unset in the process)
- * 5. `apiKeyHelper` from Claude Code settings (`~/.claude` / `~/.Claude` / project/local)
+ * 5. `apiKeyHelper` from Claude Code settings (`~/.claude/settings.json`, project/local)
  * 6. Local Claude Code login at `.credentials.json` under the Claude config dir
  */
 export const resolveClaudeAuth = (
@@ -431,7 +408,7 @@ export const resolveClaudeAuth = (
   }
 
   throw new Error(
-    "No Claude credentials found. Set ANTHROPIC_API_KEY, CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`, configure apiKeyHelper in ~/.claude/settings.json (or ~/.Claude/settings.json), or sign in with Claude Code (`claude` /login)."
+    "No Claude credentials found. Set ANTHROPIC_API_KEY, CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`, configure apiKeyHelper in ~/.claude/settings.json, or sign in with Claude Code (`claude` /login)."
   );
 };
 

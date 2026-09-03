@@ -9,7 +9,7 @@ import {
   formatAuthError,
   readClaudeSettings,
   resolveClaudeAuth,
-  resolveClaudeConfigDirs,
+  resolveClaudeConfigDir,
   validateHelperCredential
 } from "../src/core/claude-auth.js";
 
@@ -22,10 +22,10 @@ afterEach(() => {
   }
 });
 
-const makeHomeWithCredentials = (accessToken: string, expiresAt?: number, dirName = ".claude") => {
+const makeHomeWithCredentials = (accessToken: string, expiresAt?: number) => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), "jarvis-claude-home-"));
   tempDirs.push(home);
-  const claudeDir = path.join(home, dirName);
+  const claudeDir = path.join(home, ".claude");
   fs.mkdirSync(claudeDir, { recursive: true });
   fs.writeFileSync(
     path.join(claudeDir, ".credentials.json"),
@@ -39,13 +39,10 @@ const makeHomeWithCredentials = (accessToken: string, expiresAt?: number, dirNam
   return home;
 };
 
-const makeHomeWithSettings = (
-  settings: Record<string, unknown>,
-  dirName = ".claude"
-) => {
+const makeHomeWithSettings = (settings: Record<string, unknown>) => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), "jarvis-claude-home-"));
   tempDirs.push(home);
-  const claudeDir = path.join(home, dirName);
+  const claudeDir = path.join(home, ".claude");
   fs.mkdirSync(claudeDir, { recursive: true });
   fs.writeFileSync(path.join(claudeDir, "settings.json"), JSON.stringify(settings));
   return home;
@@ -112,13 +109,6 @@ describe("resolveClaudeAuth", () => {
     expect(auth.source).toBe("~/.claude/.credentials.json");
   });
 
-  it("loads credentials from ~/.Claude when that is the config dir", () => {
-    const home = makeHomeWithCredentials("sk-ant-oat-capital", undefined, ".Claude");
-    const auth = resolveClaudeAuth({}, { homeDir: home, allowSettingsHelper: false });
-    expect(auth.authToken).toBe("sk-ant-oat-capital");
-    expect(auth.source).toBe("~/.Claude/.credentials.json");
-  });
-
   it("ignores expired Claude Code credentials on disk", () => {
     const home = makeHomeWithCredentials("sk-ant-oat-expired", Date.now() - 1000);
     expect(() =>
@@ -150,26 +140,6 @@ describe("resolveClaudeAuth", () => {
       apiKey: "sk-ant-helper-key",
       source: "~/.claude/settings.json#apiKeyHelper"
     });
-  });
-
-  it("uses apiKeyHelper from ~/.Claude/settings.json (capital C)", () => {
-    const home = makeHomeWithSettings(
-      {
-        apiKeyHelper: "printf 'sk-ant-capital-helper'"
-      },
-      ".Claude"
-    );
-    const auth = resolveClaudeAuth(
-      {},
-      {
-        homeDir: home,
-        cwd: home,
-        allowCredentialsFile: false,
-        runHelper: () => "sk-ant-capital-helper"
-      }
-    );
-    expect(auth.apiKey).toBe("sk-ant-capital-helper");
-    expect(auth.source).toBe("~/.Claude/settings.json#apiKeyHelper");
   });
 
   it("honors CLAUDE_CONFIG_DIR for settings", () => {
@@ -398,10 +368,15 @@ describe("validateHelperCredential", () => {
   });
 });
 
-describe("resolveClaudeConfigDirs", () => {
+describe("resolveClaudeConfigDir", () => {
+  it("uses ~/.claude by default", () => {
+    expect(resolveClaudeConfigDir("/tmp/home", {})).toBe(path.join("/tmp/home", ".claude"));
+  });
+
   it("prefers CLAUDE_CONFIG_DIR when set", () => {
-    const dirs = resolveClaudeConfigDirs("/tmp/home", { CLAUDE_CONFIG_DIR: "/custom/claude" });
-    expect(dirs).toEqual([path.resolve("/custom/claude")]);
+    expect(resolveClaudeConfigDir("/tmp/home", { CLAUDE_CONFIG_DIR: "/custom/claude" })).toBe(
+      path.resolve("/custom/claude")
+    );
   });
 });
 
@@ -425,9 +400,9 @@ describe("formatAuthError", () => {
       formatAuthError(new Error("401 API key is invalid"), {
         mode: "api_key",
         apiKey: "sk-secret",
-        source: "~/.Claude/settings.json#apiKeyHelper"
+        source: "~/.claude/settings.json#apiKeyHelper"
       })
-    ).toBe("401 API key is invalid (auth: api_key via ~/.Claude/settings.json#apiKeyHelper)");
+    ).toBe("401 API key is invalid (auth: api_key via ~/.claude/settings.json#apiKeyHelper)");
   });
 });
 
