@@ -10,7 +10,7 @@ import {
   type AnthropicBaseUrl,
   type ClaudeAuth
 } from "./claude-auth.js";
-import type { ClaudeClient } from "./types.js";
+import type { ClaudeClient, ClaudeCompleteOptions } from "./types.js";
 
 const isAuthFailure = (error: unknown): boolean => {
   if (!error || typeof error !== "object") {
@@ -110,12 +110,17 @@ export class AnthropicClaudeClient implements ClaudeClient {
     }
   }
 
-  async complete(systemPrompt: string, userPrompt: string): Promise<string> {
+  async complete(
+    systemPrompt: string,
+    userPrompt: string,
+    options?: ClaudeCompleteOptions
+  ): Promise<string> {
+    const maxTokens = options?.maxTokens ?? 300;
     return this.withAuthRetry(async () => {
       if (this.auth.mode === "api_key") {
         const response = await this.client.messages.create({
           model: this.model,
-          max_tokens: 300,
+          max_tokens: maxTokens,
           system: systemPrompt,
           messages: [{ role: "user", content: userPrompt }]
         });
@@ -127,7 +132,7 @@ export class AnthropicClaudeClient implements ClaudeClient {
       // and the beta Messages route with oauth-2025-04-20.
       const response = await this.client.beta.messages.create({
         model: this.model,
-        max_tokens: 300,
+        max_tokens: maxTokens,
         betas: [CLAUDE_CODE_OAUTH_BETA],
         system: [
           { type: "text", text: CLAUDE_CODE_IDENTITY_PROMPT },

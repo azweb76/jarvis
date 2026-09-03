@@ -51,7 +51,7 @@ export function HudHeader() {
               fontSize: { xs: "1rem", md: "1.1rem" }
             }}
           >
-            Personal assistant interface. Speak freely, then route work to specialist agents.
+            Personal assistant for projects. Brainstorm, plan, implement in git worktrees, verify, and loop.
           </Typography>
         </Box>
         <Stack spacing={1} sx={{ alignItems: "flex-end", pt: 0.5, flexShrink: 0 }}>

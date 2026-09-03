@@ -76,7 +76,15 @@ Optional: `ANTHROPIC_BASE_URL` routes requests through an LLM gateway/proxy (sam
 - Multi-agent system:
   - `greeter`: user-facing conversational agent
   - `memory`: stores user profile and preferences
-  - `planner`: creates lightweight plans/tasks
+  - `brainstorm`: options, recommendation, and risks before coding
+  - `planner`: creates lightweight plans/tasks with a verify step
+  - `implementer`: applies focused file changes in a git worktree
+  - `verifier`: interprets check output and recommends looping when needed
+- Project workshop (advise along the way):
+  - brainstorm → plan → implement → verify → loop
+  - creates an isolated `git worktree` + branch under `../.jarvis-worktrees/<repo>/<session>`
+  - chat intents: `help me work on /path/to/repo: …`, `keep going`, `project status`
+  - HTTP APIs to start/advance/loop/commit sessions and inspect worktrees
 - Agent-to-agent communication with `sendMessage` on a message bus
   - structured message envelope: `priority`, `correlationId`, `taskId`, `ttlMs`
 - Task assignment endpoint: assign tasks to specific agents
@@ -105,7 +113,7 @@ Then open `http://localhost:3000`.
 - `POST /api/agents/:agentId/tasks`
   - body: `{ "title": "task", "prompt": "details" }`
 - `GET /api/state`
-  - returns memory, skills, history, agents, and message bus snapshot
+  - returns memory, skills, history, agents, message bus snapshot, project sessions, and backupDir
 - `GET /api/auth`
   - returns `{ "mode", "source", "baseUrl", "baseUrlSource", "apiKeyHelperConfigured", "apiKeyHelperSourcePath", "configDirs", "envOverridesHelper" }` (never secrets)
 - `GET /api/agents/:agentId/messages`
@@ -120,6 +128,20 @@ Then open `http://localhost:3000`.
   - write a timestamped JSON snapshot under `data/backups/`
 - `POST /api/data/import`
   - restore from a backup object (`{ "version": 1, "exportedAt": …, "memory": {…}, "skills": {…} }`)
+- `GET /api/projects`
+  - list project workshop sessions
+- `POST /api/projects`
+  - start brainstorm+plan in a new git worktree
+  - body: `{ "repoPath": "/path/to/repo", "goal": "…", "branch": "optional", "maxLoops": 3 }`
+- `POST /api/projects/:sessionId/advance`
+  - move to the next phase (implement → verify → done, looping when verify fails)
+- `POST /api/projects/:sessionId/loop`
+  - keep advancing until verify passes or max loops
+- `POST /api/projects/:sessionId/commit`
+  - `git add -A && git commit` inside the session worktree
+  - body: `{ "message": "optional commit message" }`
+- `GET /api/git/worktrees?repoPath=/path/to/repo`
+  - repo snapshot + `git worktree list`
 
 ## Backlog
 

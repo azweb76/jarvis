@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { ChatPanel } from "./components/ChatPanel";
 import { DataPanel } from "./components/DataPanel";
 import { HudShell } from "./components/HudShell";
+import { ProjectPanel } from "./components/ProjectPanel";
 import { TaskPanel } from "./components/TaskPanel";
 
 export function App() {
@@ -26,6 +27,9 @@ export function App() {
             <TaskPanel />
           </Grid>
           <Grid size={{ xs: 12 }} sx={{ display: "flex" }}>
+            <ProjectPanel />
+          </Grid>
+          <Grid size={{ xs: 12 }} sx={{ display: "flex" }}>
             <DataPanel />
           </Grid>
         </Grid>
@@ -42,7 +46,7 @@ export function App() {
           }}
         >
           <Typography variant="overline" color="text.secondary">
-            Nodes · greeter / memory / planner
+            Nodes · greeter / memory / brainstorm / planner / implementer / verifier
           </Typography>
           <Typography variant="overline" color="primary.main">
             Ready for directive

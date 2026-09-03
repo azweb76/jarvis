@@ -5,13 +5,6 @@
 1. Add streaming chat responses and partial token rendering.
 2. Add stronger agent orchestration policy (routing, retries, fallback agent).
 
-## Recently completed
-
-- Persist memory and skill notes to SQLite
-- Local backup/export for memory and skills (download JSON, write `data/backups/`, restore)
-- Lightweight guardrails for inter-agent messages (agent ids, content length, priority, TTL, refs)
-- Structured `SendMessage` envelopes with `priority`, `correlationId`, `taskId`, and `ttlMs`
-
 ## P1 - Better assistant experience
 
 1. Add personality profiles (friend, coach, concise assistant).
@@ -19,6 +12,15 @@
 3. Add planner-to-executor workflow where planner creates tasks for specialist agents.
 4. Add task board UI (create, assign, status updates, done).
 5. Add memory controls in UI (view/edit/delete stored facts).
+6. Deepen project workshop: multi-repo dashboards, PR creation from worktrees, richer loop telemetry.
+
+## Recently completed
+
+- Persist memory and skill notes to SQLite
+- Local backup/export for memory and skills (download JSON, write `data/backups/`, restore)
+- Lightweight guardrails for inter-agent messages (agent ids, content length, priority, TTL, refs)
+- Structured `SendMessage` envelopes with `priority`, `correlationId`, `taskId`, and `ttlMs`
+- Project workshop with git worktrees: brainstorm → plan → implement → verify → loop
 
 ## P2 - Self-improvement and skills
 
