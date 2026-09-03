@@ -422,6 +422,60 @@ export const describeClaudeAuth = (auth: ClaudeAuth): { mode: ClaudeAuthMode; so
   source: auth.source
 });
 
+export interface AnthropicBaseUrl {
+  /** Resolved API host root (no trailing slash). Absent when using the SDK default. */
+  baseUrl?: string;
+  /** Where the URL was loaded from (for diagnostics). */
+  source?: string;
+}
+
+export interface ResolveAnthropicBaseUrlOptions {
+  homeDir?: string;
+  cwd?: string;
+}
+
+/** Strip trailing slashes so SDK path joining stays consistent. */
+const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, "");
+
+/**
+ * Resolve the Anthropic API base URL for Jarvis / Claude Code gateways.
+ *
+ * Priority:
+ * 1. `ANTHROPIC_BASE_URL` in the process environment
+ * 2. `ANTHROPIC_BASE_URL` from Claude settings `env` blocks
+ *    (`~/.claude/settings.json`, project, then local)
+ *
+ * When neither is set, returns `{}` so the Anthropic SDK uses its default
+ * (`https://api.anthropic.com`).
+ */
+export const resolveAnthropicBaseUrl = (
+  env: NodeJS.ProcessEnv = process.env,
+  options: ResolveAnthropicBaseUrlOptions = {}
+): AnthropicBaseUrl => {
+  const fromProcess = trim(env.ANTHROPIC_BASE_URL);
+  if (fromProcess) {
+    return {
+      baseUrl: normalizeBaseUrl(fromProcess),
+      source: "ANTHROPIC_BASE_URL"
+    };
+  }
+
+  const settings = readClaudeSettings({
+    homeDir: options.homeDir,
+    cwd: options.cwd,
+    env
+  });
+  const fromSettings = trim(settings.env.ANTHROPIC_BASE_URL);
+  if (fromSettings) {
+    return {
+      baseUrl: normalizeBaseUrl(fromSettings),
+      source: "settings.env.ANTHROPIC_BASE_URL"
+    };
+  }
+
+  return {};
+};
+
 export const formatAuthError = (error: unknown, auth?: ClaudeAuth): string => {
   const base = error instanceof Error ? error.message : String(error);
   if (!auth) {

@@ -56,6 +56,20 @@ A stale `ANTHROPIC_API_KEY` in your shell or `.env` overrides `apiKeyHelper`. Un
 
 Optional: `CLAUDE_MODEL` overrides the default model id.
 
+Optional: `ANTHROPIC_BASE_URL` routes requests through an LLM gateway/proxy (same as Claude Code). Process env wins; otherwise Jarvis reads it from Claude settings `env`:
+
+```json
+// ~/.claude/settings.json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://llm-gateway.example.com",
+    "ANTHROPIC_AUTH_TOKEN": "sk-gateway-key"
+  }
+}
+```
+
+`GET /api/auth` reports the active `baseUrl` and `baseUrlSource` when one is configured.
+
 ## Features implemented
 
 - Chat with a friendly personal assistant ("greeter" agent)
@@ -91,7 +105,7 @@ Then open `http://localhost:3000`.
 - `GET /api/state`
   - returns memory/history/agent list
 - `GET /api/auth`
-  - returns `{ "mode", "source", "apiKeyHelperConfigured", "apiKeyHelperSourcePath", "configDirs", "envOverridesHelper" }` (never secrets)
+  - returns `{ "mode", "source", "baseUrl", "baseUrlSource", "apiKeyHelperConfigured", "apiKeyHelperSourcePath", "configDirs", "envOverridesHelper" }` (never secrets)
 - `GET /api/agents/:agentId/messages`
   - returns inbox and outbox for an agent
 - `POST /api/agents/messages`

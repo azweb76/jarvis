@@ -5,7 +5,9 @@ import {
   describeClaudeAuth,
   formatAuthError,
   invalidateApiKeyHelperCache,
+  resolveAnthropicBaseUrl,
   resolveClaudeAuth,
+  type AnthropicBaseUrl,
   type ClaudeAuth
 } from "./claude-auth.js";
 import type { ClaudeClient } from "./types.js";
@@ -26,18 +28,23 @@ export class AnthropicClaudeClient implements ClaudeClient {
   private client: Anthropic;
   private model: string;
   private auth: ClaudeAuth;
+  private baseUrl: AnthropicBaseUrl;
   private helperRetried = false;
 
   constructor(
     model = process.env.CLAUDE_MODEL ?? "claude-sonnet-4-20250514",
-    auth: ClaudeAuth = resolveClaudeAuth()
+    auth: ClaudeAuth = resolveClaudeAuth(),
+    baseUrl: AnthropicBaseUrl = resolveAnthropicBaseUrl()
   ) {
     this.model = model;
     this.auth = auth;
-    this.client = this.buildClient(auth);
+    this.baseUrl = baseUrl;
+    this.client = this.buildClient(auth, baseUrl);
   }
 
-  private buildClient(auth: ClaudeAuth): Anthropic {
+  private buildClient(auth: ClaudeAuth, baseUrl: AnthropicBaseUrl): Anthropic {
+    const endpoint = baseUrl.baseUrl ? { baseURL: baseUrl.baseUrl } : {};
+
     if (auth.mode === "api_key") {
       // Send Console / helper API keys as x-api-key only. Setting authToken as
       // well put the same secret in Authorization: Bearer, which Anthropic's
@@ -45,7 +52,8 @@ export class AnthropicClaudeClient implements ClaudeClient {
       // even when the key itself is valid. Gateways that need Bearer should set
       // ANTHROPIC_AUTH_TOKEN or ANTHROPIC_BASE_URL + a bearer-shaped helper.
       return new Anthropic({
-        apiKey: auth.apiKey
+        apiKey: auth.apiKey,
+        ...endpoint
       });
     }
 
@@ -56,19 +64,30 @@ export class AnthropicClaudeClient implements ClaudeClient {
       defaultHeaders: {
         "x-app": "cli",
         "user-agent": "claude-cli/2.0.0 (external, jarvis)"
-      }
+      },
+      ...endpoint
     });
   }
 
-  getAuthInfo(): { mode: ClaudeAuth["mode"]; source: string } {
-    return describeClaudeAuth(this.auth);
+  getAuthInfo(): {
+    mode: ClaudeAuth["mode"];
+    source: string;
+    baseUrl: string | null;
+    baseUrlSource: string | null;
+  } {
+    return {
+      ...describeClaudeAuth(this.auth),
+      baseUrl: this.baseUrl.baseUrl ?? null,
+      baseUrlSource: this.baseUrl.source ?? null
+    };
   }
 
   /** Re-run credential resolution (clears apiKeyHelper cache first). */
   refreshAuth(): ClaudeAuth {
     invalidateApiKeyHelperCache();
     this.auth = resolveClaudeAuth();
-    this.client = this.buildClient(this.auth);
+    this.baseUrl = resolveAnthropicBaseUrl();
+    this.client = this.buildClient(this.auth, this.baseUrl);
     this.helperRetried = false;
     return this.auth;
   }
