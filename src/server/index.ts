@@ -2,6 +2,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer as createViteServer } from "vite";
+import { readClaudeSettings } from "../core/claude-auth.js";
 import { AnthropicClaudeClient } from "../core/claude-client.js";
 import { JarvisRuntime } from "../core/jarvis.js";
 
@@ -48,7 +49,20 @@ app.get("/api/state", (_req, res) => {
 });
 
 app.get("/api/auth", (_req, res) => {
-  res.json(claudeClient.getAuthInfo());
+  const auth = claudeClient.getAuthInfo();
+  const settings = readClaudeSettings();
+  res.json({
+    ...auth,
+    apiKeyHelperConfigured: Boolean(settings.apiKeyHelper),
+    apiKeyHelperSourcePath: settings.apiKeyHelperSourcePath ?? null,
+    configDirs: settings.configDirs,
+    envOverridesHelper:
+      auth.source === "ANTHROPIC_API_KEY" ||
+      auth.source === "CLAUDE_CODE_OAUTH_TOKEN" ||
+      auth.source === "ANTHROPIC_AUTH_TOKEN"
+        ? Boolean(settings.apiKeyHelper)
+        : false
+  });
 });
 
 app.get("/api/agents/:agentId/messages", (req, res) => {
