@@ -1,32 +1,29 @@
-import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
-import Toolbar from "@mui/material/Toolbar";
+import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { ChatPanel } from "./components/ChatPanel";
-import { ColorModeToggle } from "./components/ColorModeToggle";
+import { HudShell } from "./components/HudShell";
 import { TaskPanel } from "./components/TaskPanel";
 
 export function App() {
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-      <AppBar position="sticky" color="default" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Jarvis
+    <HudShell>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, md: 4 }, pb: { xs: 4, md: 6 } }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={{ xs: 1, sm: 3 }}
+          sx={{ mb: 2.5, opacity: 0.85 }}
+        >
+          <Typography variant="overline" color="text.secondary">
+            Nodes · greeter / memory / planner
           </Typography>
-          <ColorModeToggle />
-        </Toolbar>
-      </AppBar>
-      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
-        <Typography variant="h4" gutterBottom>
-          Personal assistant
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3, maxWidth: 56 * 8 }}>
-          Chat with Jarvis and assign work to planner, memory, and greeter agents.
-        </Typography>
-        <Grid container spacing={3}>
+          <Typography variant="overline" color="text.secondary">
+            Channel · encrypted local runtime
+          </Typography>
+        </Stack>
+        <Grid container spacing={2.5} alignItems="stretch">
           <Grid size={{ xs: 12, md: 7 }}>
             <ChatPanel />
           </Grid>
@@ -34,7 +31,26 @@ export function App() {
             <TaskPanel />
           </Grid>
         </Grid>
+        <Box
+          sx={{
+            mt: 3,
+            pt: 1.5,
+            borderTop: "1px solid",
+            borderColor: "divider",
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 2,
+            flexWrap: "wrap"
+          }}
+        >
+          <Typography variant="overline" color="text.secondary">
+            Status · nominal
+          </Typography>
+          <Typography variant="overline" color="primary.main">
+            Ready for directive
+          </Typography>
+        </Box>
       </Container>
-    </Box>
+    </HudShell>
   );
 }

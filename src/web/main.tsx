@@ -13,7 +13,7 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <ThemeProvider theme={theme} defaultMode="system" noSsr>
+    <ThemeProvider theme={theme} defaultMode="dark" noSsr>
       <CssBaseline />
       <App />
     </ThemeProvider>

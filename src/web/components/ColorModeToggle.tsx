@@ -14,9 +14,9 @@ const labels = {
 } as const;
 
 const icons = {
-  system: <SettingsBrightnessOutlinedIcon />,
-  light: <LightModeOutlinedIcon />,
-  dark: <DarkModeOutlinedIcon />
+  system: <SettingsBrightnessOutlinedIcon fontSize="small" />,
+  light: <LightModeOutlinedIcon fontSize="small" />,
+  dark: <DarkModeOutlinedIcon fontSize="small" />
 } as const;
 
 export function ColorModeToggle() {
@@ -26,11 +26,18 @@ export function ColorModeToggle() {
   return (
     <Tooltip title={`${labels[current]} — click to cycle`}>
       <IconButton
-        color="inherit"
+        color="primary"
         aria-label={`Color mode: ${labels[current]}`}
         onClick={() => {
           const next = cycle[(cycle.indexOf(current) + 1) % cycle.length];
           setMode(next);
+        }}
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 1,
+          width: 40,
+          height: 40
         }}
       >
         {icons[current]}

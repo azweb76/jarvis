@@ -2,11 +2,11 @@ import AssignmentIndOutlinedIcon from "@mui/icons-material/AssignmentIndOutlined
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { FormEvent, useState } from "react";
+import { HudPanel } from "./HudPanel";
 
 const agents = [
   { id: "planner", label: "Planner" },
@@ -49,14 +49,16 @@ export function TaskPanel() {
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 2.5, height: "100%" }}>
+    <HudPanel title="Agent ops" code="AG-02" delayMs={180}>
       <Stack spacing={2}>
-        <Typography variant="h6">Assign Agent Task</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Dispatch a directive to a specialist node.
+        </Typography>
         <Box component="form" onSubmit={onSubmit}>
           <Stack spacing={2}>
             <TextField
               select
-              label="Agent"
+              label="Agent node"
               value={agentId}
               onChange={(event) => setAgentId(event.target.value)}
               disabled={busy}
@@ -70,7 +72,7 @@ export function TaskPanel() {
               ))}
             </TextField>
             <TextField
-              label="Task title"
+              label="Directive title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               disabled={busy}
@@ -79,7 +81,7 @@ export function TaskPanel() {
               size="small"
             />
             <TextField
-              label="Task prompt"
+              label="Directive payload"
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
               disabled={busy}
@@ -95,32 +97,42 @@ export function TaskPanel() {
               startIcon={<AssignmentIndOutlinedIcon />}
               disabled={busy || !title.trim() || !prompt.trim()}
             >
-              Assign
+              {busy ? "Routing…" : "Assign"}
             </Button>
           </Stack>
         </Box>
         {error ? (
           <Typography color="error" variant="body2">
-            {error}
+            FAULT · {error}
           </Typography>
         ) : null}
         {output ? (
           <Box
             component="pre"
-            sx={{
-              m: 0,
-              p: 2,
-              overflowX: "auto",
-              borderRadius: 1,
-              bgcolor: "action.hover",
-              typography: "body2",
-              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace"
-            }}
+            sx={[
+              {
+                m: 0,
+                p: 2,
+                overflowX: "auto",
+                border: "1px solid",
+                borderColor: "divider",
+                typography: "body2",
+                fontFamily: '"Share Tech Mono", monospace',
+                color: "primary.dark",
+                animation: "hudFadeUp 0.4s ease both",
+                background: "rgba(10,126,164,0.06)"
+              },
+              (theme) =>
+                theme.applyStyles("dark", {
+                  color: "primary.light",
+                  background: "rgba(61,224,255,0.06)"
+                })
+            ]}
           >
             {output}
           </Box>
         ) : null}
       </Stack>
-    </Paper>
+    </HudPanel>
   );
 }
