@@ -4,6 +4,7 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { ChatPanel } from "./components/ChatPanel";
 import { HudShell } from "./components/HudShell";
+import { ProjectPanel } from "./components/ProjectPanel";
 import { TaskPanel } from "./components/TaskPanel";
 
 export function App() {
@@ -24,6 +25,9 @@ export function App() {
           <Grid size={{ xs: 12, md: 5 }} sx={{ display: "flex" }}>
             <TaskPanel />
           </Grid>
+          <Grid size={{ xs: 12 }} sx={{ display: "flex" }}>
+            <ProjectPanel />
+          </Grid>
         </Grid>
         <Box
           sx={{
@@ -38,7 +42,7 @@ export function App() {
           }}
         >
           <Typography variant="overline" color="text.secondary">
-            Nodes · greeter / memory / planner
+            Nodes · greeter / memory / brainstorm / planner / implementer / verifier
           </Typography>
           <Typography variant="overline" color="primary.main">
             Ready for directive

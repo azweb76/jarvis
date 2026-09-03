@@ -48,6 +48,80 @@ app.get("/api/state", (_req, res) => {
   res.json(runtime.getState());
 });
 
+app.get("/api/projects", (_req, res) => {
+  res.json({ projects: runtime.listProjects() });
+});
+
+app.get("/api/projects/:sessionId", (req, res) => {
+  try {
+    return res.json(runtime.getProject(req.params.sessionId));
+  } catch (error) {
+    return res.status(404).json({ error: (error as Error).message });
+  }
+});
+
+app.post("/api/projects", async (req, res) => {
+  try {
+    const repoPath = String(req.body?.repoPath ?? "").trim();
+    const goal = String(req.body?.goal ?? "").trim();
+    const branch = req.body?.branch ? String(req.body.branch).trim() : undefined;
+    const maxLoops = Number(req.body?.maxLoops);
+    if (!repoPath || !goal) {
+      return res.status(400).json({ error: "repoPath and goal are required" });
+    }
+    const session = await runtime.startProject({
+      repoPath,
+      goal,
+      branch,
+      maxLoops: Number.isFinite(maxLoops) && maxLoops > 0 ? maxLoops : undefined
+    });
+    return res.json(session);
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+app.post("/api/projects/:sessionId/advance", async (req, res) => {
+  try {
+    const session = await runtime.advanceProject(req.params.sessionId);
+    return res.json(session);
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+app.post("/api/projects/:sessionId/loop", async (req, res) => {
+  try {
+    const session = await runtime.loopProject(req.params.sessionId);
+    return res.json(session);
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+app.post("/api/projects/:sessionId/commit", async (req, res) => {
+  try {
+    const message = req.body?.message ? String(req.body.message).trim() : undefined;
+    const result = await runtime.commitProject(req.params.sessionId, message);
+    return res.json(result);
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+app.get("/api/git/worktrees", async (req, res) => {
+  try {
+    const repoPath = String(req.query.repoPath ?? "").trim();
+    if (!repoPath) {
+      return res.status(400).json({ error: "repoPath query param is required" });
+    }
+    const inspection = await runtime.inspectProjectRepo(repoPath);
+    return res.json(inspection);
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
 app.get("/api/auth", (_req, res) => {
   const auth = claudeClient.getAuthInfo();
   const settings = readClaudeSettings();

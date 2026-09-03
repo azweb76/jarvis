@@ -8,10 +8,6 @@
 4. Add local backup/export for memory and skills data.
 5. Add lightweight guardrails and validation policies for inter-agent messages.
 
-## Recently completed
-
-- Structured `SendMessage` envelopes with `priority`, `correlationId`, `taskId`, and `ttlMs`
-
 ## P1 - Better assistant experience
 
 1. Add personality profiles (friend, coach, concise assistant).
@@ -19,6 +15,12 @@
 3. Add planner-to-executor workflow where planner creates tasks for specialist agents.
 4. Add task board UI (create, assign, status updates, done).
 5. Add memory controls in UI (view/edit/delete stored facts).
+6. Deepen project workshop: multi-repo dashboards, PR creation from worktrees, richer loop telemetry.
+
+## Recently completed
+
+- Structured `SendMessage` envelopes with `priority`, `correlationId`, `taskId`, and `ttlMs`
+- Project workshop with git worktrees: brainstorm → plan → implement → verify → loop
 
 ## P2 - Self-improvement and skills
 

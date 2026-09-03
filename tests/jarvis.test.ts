@@ -6,7 +6,10 @@ import { JarvisRuntime } from "../src/core/jarvis.js";
 import type { ClaudeClient } from "../src/core/types.js";
 
 class FakeClaudeClient implements ClaudeClient {
-  async complete(_systemPrompt: string, userPrompt: string): Promise<string> {
+  async complete(systemPrompt: string, userPrompt: string): Promise<string> {
+    if (systemPrompt.includes("Jarvis planner") || systemPrompt.includes("Start with 'Plan draft:'")) {
+      return "Plan draft: 1) understand request 2) split into implementation tasks 3) execute and verify.";
+    }
     if (userPrompt.includes("Known user name: Dan")) {
       return "Hi Dan! Great to hear from you.";
     }

@@ -10,6 +10,9 @@ import { HudPanel } from "./HudPanel";
 
 const agents = [
   { id: "planner", label: "Planner" },
+  { id: "brainstorm", label: "Brainstorm" },
+  { id: "implementer", label: "Implementer" },
+  { id: "verifier", label: "Verifier" },
   { id: "memory", label: "Memory" },
   { id: "greeter", label: "Greeter" }
 ];

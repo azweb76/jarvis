@@ -45,6 +45,14 @@ export interface AgentDefinition {
   respond: (input: string, context: AgentContext) => Promise<string>;
 }
 
+export interface ClaudeCompleteOptions {
+  maxTokens?: number;
+}
+
 export interface ClaudeClient {
-  complete: (systemPrompt: string, userPrompt: string) => Promise<string>;
+  complete: (
+    systemPrompt: string,
+    userPrompt: string,
+    options?: ClaudeCompleteOptions
+  ) => Promise<string>;
 }
