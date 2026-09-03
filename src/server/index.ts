@@ -5,6 +5,7 @@ import { createServer as createViteServer } from "vite";
 import { readClaudeSettings } from "../core/claude-auth.js";
 import { AnthropicClaudeClient } from "../core/claude-client.js";
 import { formatBackupFilename } from "../core/durable-store.js";
+import { GithubError } from "../core/github.js";
 import { JarvisRuntime, MessagePolicyError } from "../core/jarvis.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -22,10 +23,22 @@ const sendRuntimeError = (res: express.Response, error: unknown) => {
   if (error instanceof MessagePolicyError) {
     return res.status(400).json({ error: message, code: error.code });
   }
+  if (error instanceof GithubError) {
+    const status =
+      error.status && error.status >= 400 && error.status < 600 ? error.status : 500;
+    return res.status(status).json({ error: message, code: error.code });
+  }
   if (typeof message === "string" && /invalid jarvis backup/i.test(message)) {
     return res.status(400).json({ error: message });
   }
   return res.status(500).json({ error: message });
+};
+
+const bindAbort = (req: express.Request): AbortSignal => {
+  const controller = new AbortController();
+  const onClose = () => controller.abort();
+  req.on("close", onClose);
+  return controller.signal;
 };
 
 app.post("/api/chat", async (req, res) => {
@@ -131,6 +144,66 @@ app.get("/api/git/worktrees", async (req, res) => {
     return res.json(inspection);
   } catch (error) {
     return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+app.get("/api/github/status", (_req, res) => {
+  res.json(runtime.githubStatus());
+});
+
+app.get("/api/github/search", async (req, res) => {
+  try {
+    const q = String(req.query.q ?? "").trim();
+    if (!q) {
+      return res.status(400).json({ error: "q query param is required" });
+    }
+    const perPage = Number(req.query.perPage);
+    const signal = bindAbort(req);
+    const result = await runtime.searchGithubRepos(q, {
+      perPage: Number.isFinite(perPage) && perPage > 0 ? perPage : undefined,
+      signal
+    });
+    return res.json(result);
+  } catch (error) {
+    if ((error as Error).name === "AbortError") {
+      return res.status(499).json({ error: "client disconnected" });
+    }
+    return sendRuntimeError(res, error);
+  }
+});
+
+app.get("/api/github/repos/:owner/:repo", async (req, res) => {
+  try {
+    const fullName = `${req.params.owner}/${req.params.repo}`;
+    const signal = bindAbort(req);
+    const repo = await runtime.lookupGithubRepo(fullName, { signal });
+    return res.json(repo);
+  } catch (error) {
+    if ((error as Error).name === "AbortError") {
+      return res.status(499).json({ error: "client disconnected" });
+    }
+    return sendRuntimeError(res, error);
+  }
+});
+
+app.get("/api/github/cloned", (_req, res) => {
+  res.json({ repos: runtime.listClonedGithubRepos(), ...runtime.githubStatus() });
+});
+
+app.post("/api/github/clone", async (req, res) => {
+  try {
+    const fullName = req.body?.fullName ? String(req.body.fullName).trim() : undefined;
+    const cloneUrl = req.body?.cloneUrl ? String(req.body.cloneUrl).trim() : undefined;
+    const destination = req.body?.destination
+      ? String(req.body.destination).trim()
+      : undefined;
+    if (!fullName && !cloneUrl) {
+      return res.status(400).json({ error: "fullName or cloneUrl is required" });
+    }
+    const result = await runtime.cloneGithubRepo({ fullName, cloneUrl, destination });
+    return res.json(result);
+  } catch (error) {
+    return sendRuntimeError(res, error);
   }
 });
 

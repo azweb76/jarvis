@@ -1,6 +1,9 @@
 import path from "node:path";
 import { createCoreAgents } from "./agents.js";
 import type { JarvisBackup } from "./durable-store.js";
+import type { CloneRepoInput } from "./github.js";
+import { GithubError } from "./github.js";
+import { GithubService } from "./github-service.js";
 import { MessageBus, type AgentMessage } from "./message-bus.js";
 import { assertValidAgentMessage, MessagePolicyError } from "./message-guardrails.js";
 import { PersistentMemoryStore } from "./persistent-memory.js";
@@ -17,7 +20,7 @@ import type {
   SendMessageOptions
 } from "./types.js";
 
-export { MessagePolicyError };
+export { MessagePolicyError, GithubError };
 
 export class JarvisRuntime {
   private readonly memory: PersistentMemoryStore;
@@ -27,6 +30,7 @@ export class JarvisRuntime {
   private readonly history: ChatMessage[] = [];
   private readonly projectStore: ProjectSessionStore;
   private readonly workshop: ProjectWorkshop;
+  private readonly github = new GithubService();
   private readonly backupDir: string;
 
   constructor(
@@ -50,6 +54,11 @@ export class JarvisRuntime {
 
     await memory.respond(input, this.makeContext());
 
+    const githubNote = await this.maybeHandleGithubIntent(input);
+    if (githubNote) {
+      this.memory.set("github.latestSummary", githubNote);
+    }
+
     const workshopNote = await this.maybeHandleProjectIntent(input);
     if (workshopNote) {
       this.memory.set("project.latestSummary", workshopNote);
@@ -57,7 +66,8 @@ export class JarvisRuntime {
 
     const text = await greeter.respond(input, this.makeContext());
     this.skills.maybeSelfImprove("greeter", input, text);
-    const combined = workshopNote ? `${text}\n\n---\n${workshopNote}` : text;
+    const extras = [githubNote, workshopNote].filter(Boolean);
+    const combined = extras.length > 0 ? `${text}\n\n---\n${extras.join("\n\n---\n")}` : text;
     this.history.push({ sender: "agent", content: combined, at: Date.now() });
     return { agentId: greeter.id, text: combined };
   }
@@ -112,6 +122,34 @@ export class JarvisRuntime {
     return this.workshop.listWorktrees(repoPath);
   }
 
+  githubStatus() {
+    return this.github.status();
+  }
+
+  searchGithubRepos(
+    query: string,
+    options?: { perPage?: number; signal?: AbortSignal }
+  ) {
+    return this.github.search(query, options);
+  }
+
+  lookupGithubRepo(fullName: string, options?: { signal?: AbortSignal }) {
+    return this.github.lookup(fullName, options);
+  }
+
+  cloneGithubRepo(input: CloneRepoInput) {
+    return this.github.clone(input).then((result) => {
+      this.memory.set("github.latestClonePath", result.path);
+      this.memory.set("github.latestCloneFullName", result.fullName);
+      this.memory.set("project.repoPath", result.path);
+      return result;
+    });
+  }
+
+  listClonedGithubRepos() {
+    return this.github.listCloned();
+  }
+
   sendAgentMessage(
     fromAgentId: string,
     toAgentId: string,
@@ -156,6 +194,7 @@ export class JarvisRuntime {
     messages: ReturnType<MessageBus["all"]>;
     projects: ProjectSession[];
     backupDir: string;
+    github: ReturnType<GithubService["status"]>;
   } {
     return {
       memory: this.memory.snapshot(),
@@ -164,8 +203,28 @@ export class JarvisRuntime {
       agents: this.agentIds(),
       messages: this.messageBus.all(),
       projects: this.workshop.listSessions(),
-      backupDir: path.resolve(this.backupDir)
+      backupDir: path.resolve(this.backupDir),
+      github: this.github.status()
     };
+  }
+
+  private async maybeHandleGithubIntent(input: string): Promise<string | null> {
+    try {
+      const note = await this.github.handleChatIntent(input);
+      if (!note) return null;
+      const cloneMatch = note.match(/^Cloned (.+)\nPath: (.+)$/m) || note.match(/^Already cloned: (.+)\nPath: (.+)$/m);
+      if (cloneMatch) {
+        this.memory.set("github.latestCloneFullName", cloneMatch[1]);
+        this.memory.set("github.latestClonePath", cloneMatch[2]);
+        this.memory.set("project.repoPath", cloneMatch[2]);
+      }
+      return note;
+    } catch (error) {
+      if (error instanceof GithubError) {
+        return `GitHub: ${error.message}`;
+      }
+      throw error;
+    }
   }
 
   private async maybeHandleProjectIntent(input: string): Promise<string | null> {

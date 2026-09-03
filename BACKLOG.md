@@ -21,6 +21,7 @@
 - Lightweight guardrails for inter-agent messages (agent ids, content length, priority, TTL, refs)
 - Structured `SendMessage` envelopes with `priority`, `correlationId`, `taskId`, and `ttlMs`
 - Project workshop with git worktrees: brainstorm → plan → implement → verify → loop
+- GitHub repo search/lookup/clone via `GITHUB_TOKEN` (HUD + chat intents + APIs)
 
 ## P2 - Self-improvement and skills
 

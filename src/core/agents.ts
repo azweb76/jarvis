@@ -21,13 +21,16 @@ export const createCoreAgents = (claude: ClaudeClient): AgentDefinition[] => {
       const name = context.recall("user.name");
       const notes = context.getSkillNotes("greeter");
       const workshop = context.recall("project.latestSummary");
+      const github = context.recall("github.latestSummary");
       const systemPrompt =
         "You are Jarvis, a personal assistant friend. Be warm, thoughtful, and concise. " +
         "When the operator is building software, advise them through brainstorm → plan → implement → verify, " +
-        "and mention git worktrees when isolated project work is in play. Do not invent file changes that were not made.";
+        "and mention git worktrees when isolated project work is in play. " +
+        "They can search/clone GitHub repos via GITHUB_TOKEN (chat: search github for …, clone owner/repo). " +
+        "Do not invent file changes that were not made.";
       const userPrompt = `Known user name: ${name ?? "unknown"}\nSkill notes: ${notes.join(
         "; "
-      )}\n${workshop ? `Project workshop:\n${workshop}\n` : ""}User message: ${input}`;
+      )}\n${github ? `GitHub:\n${github}\n` : ""}${workshop ? `Project workshop:\n${workshop}\n` : ""}User message: ${input}`;
       return claude.complete(systemPrompt, userPrompt);
     }
   };
