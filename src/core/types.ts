@@ -11,6 +11,15 @@ export interface AgentTask {
   prompt: string;
 }
 
+export type MessagePriority = "low" | "normal" | "high";
+
+export interface SendMessageOptions {
+  priority?: MessagePriority;
+  correlationId?: string;
+  taskId?: string;
+  ttlMs?: number;
+}
+
 export interface AgentReply {
   agentId: string;
   text: string;
@@ -21,7 +30,12 @@ export interface AgentContext {
   recall: (key: string) => string | undefined;
   addSkillNote: (agentId: string, note: string) => void;
   getSkillNotes: (agentId: string) => string[];
-  sendMessage: (fromAgentId: string, toAgentId: string, content: string) => Promise<void>;
+  sendMessage: (
+    fromAgentId: string,
+    toAgentId: string,
+    content: string,
+    options?: SendMessageOptions
+  ) => Promise<void>;
 }
 
 export interface AgentDefinition {
