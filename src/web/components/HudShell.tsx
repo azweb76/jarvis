@@ -12,7 +12,7 @@ export function HudHeader() {
       sx={{
         position: "relative",
         zIndex: 2,
-        px: { xs: 2, md: 4 },
+        px: { xs: 2.5, md: 4 },
         pt: { xs: 2.5, md: 3.5 },
         pb: { xs: 2, md: 2.5 }
       }}
