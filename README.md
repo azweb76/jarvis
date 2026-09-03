@@ -9,6 +9,7 @@ It is currently designed for a single local desktop user profile (no auth/user i
 - TypeScript
 - Node + Express
 - Claude SDK (`@anthropic-ai/sdk`) with preconfigured auth via `ANTHROPIC_API_KEY`
+- React + Material UI v9 (light/dark/system color schemes)
 - Vite for frontend SPA assets
 - Vitest for tests
 - pnpm for package management

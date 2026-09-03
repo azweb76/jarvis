@@ -4,56 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Jarvis Assistant</title>
-    <script type="module" src="/main.ts"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+    />
   </head>
   <body>
-    <main>
-      <h1>Jarvis</h1>
-      <p>Your personal assistant friend with multi-agent collaboration.</p>
-      <section>
-        <h2>Chat</h2>
-        <div id="chat-log"></div>
-        <form id="chat-form">
-          <input id="chat-input" placeholder="Say hi to Jarvis..." required />
-          <button type="submit">Send</button>
-        </form>
-      </section>
-      <section>
-        <h2>Assign Agent Task</h2>
-        <form id="task-form">
-          <input id="agent-id" placeholder="agent id (planner, memory, greeter)" required />
-          <input id="task-title" placeholder="task title" required />
-          <input id="task-prompt" placeholder="task prompt" required />
-          <button type="submit">Assign</button>
-        </form>
-        <pre id="task-output"></pre>
-      </section>
-      <section>
-        <h2>Agent Inbox / Outbox</h2>
-        <form id="messages-form">
-          <input id="messages-agent-id" placeholder="agent id (greeter, memory, planner)" required />
-          <button type="submit">Load Messages</button>
-        </form>
-        <pre id="messages-output"></pre>
-      </section>
-      <section>
-        <h2>Send Structured Agent Message</h2>
-        <form id="send-message-form">
-          <input id="from-agent-id" placeholder="from agent id" required />
-          <input id="to-agent-id" placeholder="to agent id" required />
-          <input id="message-content" placeholder="message content" required />
-          <select id="message-priority">
-            <option value="normal">normal</option>
-            <option value="high">high</option>
-            <option value="low">low</option>
-          </select>
-          <input id="message-correlation-id" placeholder="correlation id (optional)" />
-          <input id="message-task-id" placeholder="task id (optional)" />
-          <input id="message-ttl-ms" type="number" placeholder="ttl ms (optional)" />
-          <button type="submit">Send Agent Message</button>
-        </form>
-        <pre id="send-message-output"></pre>
-      </section>
-    </main>
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
   </body>
 </html>
