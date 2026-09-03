@@ -2,6 +2,7 @@
 
 Jarvis is a TypeScript web application with a multi-agent runtime and Claude integration.
 It uses ESM modules, pnpm, and Vitest.
+It is currently designed for a single local desktop user profile (no auth/user isolation).
 
 ## Stack
 

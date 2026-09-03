@@ -3,10 +3,10 @@
 ## P0 - Core reliability and capability
 
 1. Persist memory and skill notes to durable storage (SQLite/Postgres/Redis).
-2. Add authentication and user-scoped memory partitioning.
-3. Add streaming chat responses and partial token rendering.
-4. Add stronger agent orchestration policy (routing, retries, fallback agent).
-5. Add structured `SendMessage` envelopes (priority, correlation ID, TTL).
+2. Add streaming chat responses and partial token rendering.
+3. Add stronger agent orchestration policy (routing, retries, fallback agent).
+4. Add structured `SendMessage` envelopes (priority, correlation ID, TTL).
+5. Add local backup/export for memory and skills data.
 
 ## P1 - Better assistant experience
 
