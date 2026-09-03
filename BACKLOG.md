@@ -5,8 +5,12 @@
 1. Persist memory and skill notes to durable storage (SQLite/Postgres/Redis).
 2. Add streaming chat responses and partial token rendering.
 3. Add stronger agent orchestration policy (routing, retries, fallback agent).
-4. Add structured `SendMessage` envelopes (priority, correlation ID, TTL).
-5. Add local backup/export for memory and skills data.
+4. Add local backup/export for memory and skills data.
+5. Add lightweight guardrails and validation policies for inter-agent messages.
+
+## Recently completed
+
+- Structured `SendMessage` envelopes with `priority`, `correlationId`, `taskId`, and `ttlMs`
 
 ## P1 - Better assistant experience
 

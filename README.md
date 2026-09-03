@@ -21,6 +21,7 @@ It is currently designed for a single local desktop user profile (no auth/user i
   - `memory`: stores user profile and preferences
   - `planner`: creates lightweight plans/tasks
 - Agent-to-agent communication with `sendMessage` on a message bus
+  - structured message envelope: `priority`, `correlationId`, `taskId`, `ttlMs`
 - Task assignment endpoint: assign tasks to specific agents
 - Self-improvement primitives:
   - SQLite-backed memory store for persistent context in runtime
@@ -47,6 +48,9 @@ Then open `http://localhost:3000`.
   - returns memory/history/agent list
 - `GET /api/agents/:agentId/messages`
   - returns inbox and outbox for an agent
+- `POST /api/agents/messages`
+  - send a structured message between agents
+  - body: `{ "fromAgentId": "planner", "toAgentId": "memory", "content": "note", "priority": "high", "correlationId": "corr-1", "taskId": "task-9", "ttlMs": 60000 }`
 
 ## Backlog
 

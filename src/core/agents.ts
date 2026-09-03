@@ -6,7 +6,11 @@ export const createCoreAgents = (claude: ClaudeClient): AgentDefinition[] => {
     role: "Friendly personal assistant and companion",
     goals: ["Keep tone warm", "Make responses actionable", "Remember preferences"],
     async respond(input: string, context: AgentContext): Promise<string> {
-      await context.sendMessage("greeter", "memory", `User said: ${input}`);
+      await context.sendMessage("greeter", "memory", `User said: ${input}`, {
+        priority: "high",
+        taskId: "remember-user-input",
+        ttlMs: 5 * 60 * 1000
+      });
       const name = context.recall("user.name");
       const notes = context.getSkillNotes("greeter");
       const systemPrompt =

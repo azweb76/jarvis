@@ -5,6 +5,8 @@ const taskForm = document.querySelector<HTMLFormElement>("#task-form");
 const taskOutput = document.querySelector<HTMLPreElement>("#task-output");
 const messagesForm = document.querySelector<HTMLFormElement>("#messages-form");
 const messagesOutput = document.querySelector<HTMLPreElement>("#messages-output");
+const sendMessageForm = document.querySelector<HTMLFormElement>("#send-message-form");
+const sendMessageOutput = document.querySelector<HTMLPreElement>("#send-message-output");
 
 const appendLine = (text: string) => {
   if (!chatLog) return;
@@ -54,5 +56,40 @@ messagesForm?.addEventListener("submit", async (event) => {
   const data = await response.json();
   if (messagesOutput) {
     messagesOutput.textContent = JSON.stringify(data, null, 2);
+  }
+});
+
+sendMessageForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const fromAgentId = (document.querySelector<HTMLInputElement>("#from-agent-id")?.value ?? "").trim();
+  const toAgentId = (document.querySelector<HTMLInputElement>("#to-agent-id")?.value ?? "").trim();
+  const content = (document.querySelector<HTMLInputElement>("#message-content")?.value ?? "").trim();
+  const priority = (document.querySelector<HTMLSelectElement>("#message-priority")?.value ?? "normal") as
+    | "low"
+    | "normal"
+    | "high";
+  const correlationId = (
+    document.querySelector<HTMLInputElement>("#message-correlation-id")?.value ?? ""
+  ).trim();
+  const taskId = (document.querySelector<HTMLInputElement>("#message-task-id")?.value ?? "").trim();
+  const ttlRaw = (document.querySelector<HTMLInputElement>("#message-ttl-ms")?.value ?? "").trim();
+  const ttlMs = ttlRaw ? Number(ttlRaw) : undefined;
+
+  const response = await fetch("/api/agents/messages", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      fromAgentId,
+      toAgentId,
+      content,
+      priority,
+      correlationId: correlationId || undefined,
+      taskId: taskId || undefined,
+      ttlMs
+    })
+  });
+  const data = await response.json();
+  if (sendMessageOutput) {
+    sendMessageOutput.textContent = JSON.stringify(data, null, 2);
   }
 });

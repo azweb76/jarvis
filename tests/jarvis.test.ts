@@ -42,13 +42,31 @@ describe("JarvisRuntime", () => {
     expect(reply.text).toContain("Plan draft");
   });
 
-  it("tracks agent inbox and outbox messages", async () => {
+  it("tracks structured agent inbox/outbox messages", async () => {
     const runtime = new JarvisRuntime(new FakeClaudeClient(), createDbPath());
-    await runtime.chat("Hello Jarvis");
-    const greeterMessages = runtime.getAgentMessages("greeter");
-    const memoryMessages = runtime.getAgentMessages("memory");
+    runtime.sendAgentMessage("planner", "memory", "low priority", {
+      priority: "low",
+      correlationId: "corr-1",
+      taskId: "task-7"
+    });
+    runtime.sendAgentMessage("greeter", "memory", "high priority", {
+      priority: "high",
+      correlationId: "corr-2"
+    });
 
-    expect(greeterMessages.outbox.length).toBeGreaterThan(0);
-    expect(memoryMessages.inbox.length).toBeGreaterThan(0);
+    const memoryMessages = runtime.getAgentMessages("memory").inbox;
+    expect(memoryMessages.length).toBe(2);
+    expect(memoryMessages[0].content).toContain("high priority");
+    expect(memoryMessages[0].priority).toBe("high");
+    expect(memoryMessages[0].correlationId).toBe("corr-2");
+    expect(memoryMessages[1].taskId).toBe("task-7");
+  });
+
+  it("filters expired inbox messages by ttl", async () => {
+    const runtime = new JarvisRuntime(new FakeClaudeClient(), createDbPath());
+    runtime.sendAgentMessage("planner", "memory", "expires soon", { ttlMs: 1 });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const inbox = runtime.getAgentMessages("memory").inbox;
+    expect(inbox.length).toBe(0);
   });
 });

@@ -1,8 +1,14 @@
 import { createCoreAgents } from "./agents.js";
-import { MessageBus } from "./message-bus.js";
+import { MessageBus, type AgentMessage } from "./message-bus.js";
 import { PersistentMemoryStore } from "./persistent-memory.js";
 import { SkillRegistry } from "./skills.js";
-import type { AgentReply, AgentTask, ChatMessage, ClaudeClient } from "./types.js";
+import type {
+  AgentReply,
+  AgentTask,
+  ChatMessage,
+  ClaudeClient,
+  SendMessageOptions
+} from "./types.js";
 
 export class JarvisRuntime {
   private readonly memory: PersistentMemoryStore;
@@ -34,7 +40,11 @@ export class JarvisRuntime {
     return { agentId: agent.id, text: outcome };
   }
 
-  getAgentMessages(agentId: string) {
+  sendAgentMessage(fromAgentId: string, toAgentId: string, content: string, options?: SendMessageOptions): void {
+    this.messageBus.send(fromAgentId, toAgentId, content, options);
+  }
+
+  getAgentMessages(agentId: string): { inbox: AgentMessage[]; outbox: AgentMessage[] } {
     return {
       inbox: this.messageBus.inbox(agentId),
       outbox: this.messageBus.outbox(agentId)
@@ -69,8 +79,13 @@ export class JarvisRuntime {
       recall: (key: string) => this.memory.get(key),
       addSkillNote: (agentId: string, note: string) => this.skills.addNote(agentId, note),
       getSkillNotes: (agentId: string) => this.skills.getNotes(agentId),
-      sendMessage: async (fromAgentId: string, toAgentId: string, content: string) => {
-        this.messageBus.send(fromAgentId, toAgentId, content);
+      sendMessage: async (
+        fromAgentId: string,
+        toAgentId: string,
+        content: string,
+        options?: SendMessageOptions
+      ) => {
+        this.messageBus.send(fromAgentId, toAgentId, content, options);
       }
     };
   }

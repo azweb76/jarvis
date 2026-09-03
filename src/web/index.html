@@ -36,6 +36,24 @@
         </form>
         <pre id="messages-output"></pre>
       </section>
+      <section>
+        <h2>Send Structured Agent Message</h2>
+        <form id="send-message-form">
+          <input id="from-agent-id" placeholder="from agent id" required />
+          <input id="to-agent-id" placeholder="to agent id" required />
+          <input id="message-content" placeholder="message content" required />
+          <select id="message-priority">
+            <option value="normal">normal</option>
+            <option value="high">high</option>
+            <option value="low">low</option>
+          </select>
+          <input id="message-correlation-id" placeholder="correlation id (optional)" />
+          <input id="message-task-id" placeholder="task id (optional)" />
+          <input id="message-ttl-ms" type="number" placeholder="ttl ms (optional)" />
+          <button type="submit">Send Agent Message</button>
+        </form>
+        <pre id="send-message-output"></pre>
+      </section>
     </main>
   </body>
 </html>

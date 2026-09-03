@@ -55,6 +55,30 @@ app.get("/api/agents/:agentId/messages", (req, res) => {
   }
 });
 
+app.post("/api/agents/messages", (req, res) => {
+  try {
+    const fromAgentId = String(req.body?.fromAgentId ?? "").trim();
+    const toAgentId = String(req.body?.toAgentId ?? "").trim();
+    const content = String(req.body?.content ?? "").trim();
+    const priority = req.body?.priority as "low" | "normal" | "high" | undefined;
+    const correlationId = req.body?.correlationId as string | undefined;
+    const taskId = req.body?.taskId as string | undefined;
+    const ttlMs = Number(req.body?.ttlMs);
+    if (!fromAgentId || !toAgentId || !content) {
+      return res.status(400).json({ error: "fromAgentId, toAgentId, and content are required" });
+    }
+    runtime.sendAgentMessage(fromAgentId, toAgentId, content, {
+      priority,
+      correlationId,
+      taskId,
+      ttlMs: Number.isFinite(ttlMs) && ttlMs > 0 ? ttlMs : undefined
+    });
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
+  }
+});
+
 const start = async () => {
   if (isDev) {
     const vite = await createViteServer({
