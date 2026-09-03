@@ -3,6 +3,7 @@ import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { ChatPanel } from "./components/ChatPanel";
+import { DataPanel } from "./components/DataPanel";
 import { HudShell } from "./components/HudShell";
 import { TaskPanel } from "./components/TaskPanel";
 
@@ -23,6 +24,9 @@ export function App() {
           </Grid>
           <Grid size={{ xs: 12, md: 5 }} sx={{ display: "flex" }}>
             <TaskPanel />
+          </Grid>
+          <Grid size={{ xs: 12 }} sx={{ display: "flex" }}>
+            <DataPanel />
           </Grid>
         </Grid>
         <Box
