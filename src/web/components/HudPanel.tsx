@@ -28,16 +28,17 @@ function Corner({
         position: "absolute",
         width: 14,
         height: 14,
-        top: top ? -1 : "auto",
-        bottom: bottom ? -1 : "auto",
-        left: left ? -1 : "auto",
-        right: right ? -1 : "auto",
+        top: top ? 0 : "auto",
+        bottom: bottom ? 0 : "auto",
+        left: left ? 0 : "auto",
+        right: right ? 0 : "auto",
         borderTop: top ? "2px solid" : "none",
         borderBottom: bottom ? "2px solid" : "none",
         borderLeft: left ? "2px solid" : "none",
         borderRight: right ? "2px solid" : "none",
         borderColor: "primary.main",
-        pointerEvents: "none"
+        pointerEvents: "none",
+        zIndex: 1
       }}
     />
   );

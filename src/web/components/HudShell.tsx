@@ -67,9 +67,9 @@ export function HudHeader() {
 
 export function HudShell({ children }: { children: ReactNode }) {
   return (
-    <Box sx={{ position: "relative", minHeight: "100vh", overflowX: "hidden" }}>
+    <Box sx={{ position: "relative", minHeight: "100vh", overflow: "visible" }}>
       <HudAtmosphere />
-      <Box sx={{ position: "relative", zIndex: 1, overflow: "visible" }}>
+      <Box sx={{ position: "relative", zIndex: 1 }}>
         <HudHeader />
         {children}
       </Box>
