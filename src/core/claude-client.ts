@@ -21,6 +21,15 @@ export class AnthropicClaudeClient implements ClaudeClient {
     this.model = model;
 
     if (auth.mode === "api_key") {
+      // Claude Code's apiKeyHelper sends the credential as both x-api-key and
+      // Authorization: Bearer so gateways that read either header work.
+      if (auth.source.includes("#apiKeyHelper") && auth.apiKey) {
+        this.client = new Anthropic({
+          apiKey: auth.apiKey,
+          authToken: auth.apiKey
+        });
+        return;
+      }
       this.client = new Anthropic({
         apiKey: auth.apiKey
       });
