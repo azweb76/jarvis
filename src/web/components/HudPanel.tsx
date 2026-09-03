@@ -57,9 +57,7 @@ export function HudPanel({ title, code, children, delayMs = 0 }: HudPanelProps) 
     >
       <Stack
         direction="row"
-        alignItems="baseline"
-        justifyContent="space-between"
-        sx={{ mb: 2 }}
+        sx={{ mb: 2, alignItems: "baseline", justifyContent: "space-between" }}
       >
         <Typography variant="h6" sx={{ fontSize: "0.95rem" }}>
           {title}

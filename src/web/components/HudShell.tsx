@@ -19,9 +19,8 @@ export function HudHeader() {
     >
       <Stack
         direction="row"
-        alignItems="flex-start"
-        justifyContent="space-between"
         spacing={2}
+        sx={{ alignItems: "flex-start", justifyContent: "space-between" }}
       >
         <Box sx={{ animation: "hudFadeUp 0.6s ease both" }}>
           <Typography
@@ -52,7 +51,7 @@ export function HudHeader() {
             Personal assistant interface. Speak freely, then route work to specialist agents.
           </Typography>
         </Box>
-        <Stack alignItems="flex-end" spacing={1} sx={{ pt: 0.5 }}>
+        <Stack spacing={1} sx={{ alignItems: "flex-end", pt: 0.5 }}>
           <ColorModeToggle />
           <Typography variant="overline" color="text.secondary">
             {new Date().toISOString().slice(0, 10)}
