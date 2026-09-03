@@ -8,10 +8,12 @@ import {
   clearApiKeyHelperCache,
   formatAuthError,
   readClaudeSettings,
+  resolveAnthropicBaseUrl,
   resolveClaudeAuth,
   resolveClaudeConfigDir,
   validateHelperCredential
 } from "../src/core/claude-auth.js";
+import { AnthropicClaudeClient } from "../src/core/claude-client.js";
 
 const tempDirs: string[] = [];
 
@@ -391,6 +393,68 @@ describe("readClaudeSettings", () => {
     );
     const settings = readClaudeSettings({ homeDir: home, cwd });
     expect(settings.env).toEqual({ A: "user", B: "project", C: "local" });
+  });
+});
+
+describe("resolveAnthropicBaseUrl", () => {
+  it("returns empty when unset", () => {
+    expect(resolveAnthropicBaseUrl({}, { homeDir: makeHomeWithSettings({}), cwd: "/tmp" })).toEqual({});
+  });
+
+  it("prefers process ANTHROPIC_BASE_URL over settings", () => {
+    const home = makeHomeWithSettings({
+      env: { ANTHROPIC_BASE_URL: "https://settings-gateway.example/" }
+    });
+    expect(
+      resolveAnthropicBaseUrl(
+        { ANTHROPIC_BASE_URL: "https://process-gateway.example/" },
+        { homeDir: home, cwd: home }
+      )
+    ).toEqual({
+      baseUrl: "https://process-gateway.example",
+      source: "ANTHROPIC_BASE_URL"
+    });
+  });
+
+  it("uses ANTHROPIC_BASE_URL from Claude settings env when process unset", () => {
+    const home = makeHomeWithSettings({
+      env: { ANTHROPIC_BASE_URL: "https://llm-gateway.example.com/" }
+    });
+    expect(resolveAnthropicBaseUrl({}, { homeDir: home, cwd: home })).toEqual({
+      baseUrl: "https://llm-gateway.example.com",
+      source: "settings.env.ANTHROPIC_BASE_URL"
+    });
+  });
+
+  it("lets local settings override user base URL", () => {
+    const home = makeHomeWithSettings({
+      env: { ANTHROPIC_BASE_URL: "https://user-gateway.example" }
+    });
+    const cwd = makeProjectWithSettings(
+      { env: { ANTHROPIC_BASE_URL: "https://project-gateway.example" } },
+      { env: { ANTHROPIC_BASE_URL: "https://local-gateway.example" } }
+    );
+    expect(resolveAnthropicBaseUrl({}, { homeDir: home, cwd })).toEqual({
+      baseUrl: "https://local-gateway.example",
+      source: "settings.env.ANTHROPIC_BASE_URL"
+    });
+  });
+});
+
+describe("AnthropicClaudeClient base URL", () => {
+  it("passes settings ANTHROPIC_BASE_URL into the SDK client", () => {
+    const client = new AnthropicClaudeClient(
+      "claude-sonnet-4-20250514",
+      { mode: "api_key", apiKey: "sk-ant-test", source: "test" },
+      { baseUrl: "https://custom-api.example", source: "settings.env.ANTHROPIC_BASE_URL" }
+    );
+    expect(client.getAuthInfo()).toMatchObject({
+      baseUrl: "https://custom-api.example",
+      baseUrlSource: "settings.env.ANTHROPIC_BASE_URL"
+    });
+    expect((client as unknown as { client: { baseURL: string } }).client.baseURL).toBe(
+      "https://custom-api.example"
+    );
   });
 });
 
