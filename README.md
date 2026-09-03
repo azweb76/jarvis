@@ -73,6 +73,7 @@ Optional: `ANTHROPIC_BASE_URL` routes requests through an LLM gateway/proxy (sam
 ## Features implemented
 
 - Chat with a friendly personal assistant ("greeter" agent)
+  - HUD labels this **Voice link**; input is still typed text until Phase 1 in [BACKLOG.md](./BACKLOG.md)
 - Multi-agent system:
   - `greeter`: user-facing conversational agent
   - `memory`: stores user profile and preferences
@@ -114,4 +115,4 @@ Then open `http://localhost:3000`.
 
 ## Backlog
 
-See [BACKLOG.md](./BACKLOG.md) for prioritized next steps.
+See [BACKLOG.md](./BACKLOG.md) for prioritized next steps, including the voice I/O plan.
