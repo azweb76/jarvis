@@ -7,6 +7,7 @@ import {
   gitStatus,
   listWorktrees,
   readReadmeExcerpt,
+  removeWorktree,
   snapshotRepo,
   suggestedWorktreePath,
   type GitRepoSnapshot,
@@ -76,10 +77,15 @@ export class ProjectWorkshop {
       updatedAt: Date.now()
     };
 
-    await this.runBrainstorm(session, snapshot);
-    await this.runPlan(session, snapshot);
-    this.persist(session);
-    return session;
+    try {
+      await this.runBrainstorm(session, snapshot);
+      await this.runPlan(session, snapshot);
+      this.persist(session);
+      return session;
+    } catch (error) {
+      await removeWorktree(snapshot.root, worktreePath).catch(() => undefined);
+      throw error;
+    }
   }
 
   async advance(sessionId: string): Promise<ProjectSession> {
