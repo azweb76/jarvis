@@ -8,10 +8,35 @@ It is currently designed for a single local desktop user profile (no auth/user i
 
 - TypeScript
 - Node + Express
-- Claude SDK (`@anthropic-ai/sdk`) with preconfigured auth via `ANTHROPIC_API_KEY`
+- Claude SDK (`@anthropic-ai/sdk`) with API key or Claude Code OAuth auth
 - Vite for frontend SPA assets
 - Vitest for tests
 - pnpm for package management
+
+## Authentication
+
+Jarvis resolves Claude credentials in this order:
+
+1. `ANTHROPIC_API_KEY` — Anthropic Console API key
+2. `CLAUDE_CODE_OAUTH_TOKEN` — long-lived OAuth token from `claude setup-token` (Pro/Max/Team/Enterprise)
+3. `ANTHROPIC_AUTH_TOKEN` — bearer token for an LLM gateway/proxy
+4. Local Claude Code login at `~/.claude/.credentials.json` (from `claude` `/login`)
+
+Generate a setup token:
+
+```bash
+claude setup-token
+export CLAUDE_CODE_OAUTH_TOKEN="…"
+pnpm dev
+```
+
+Optional: `CLAUDE_MODEL` overrides the default model id.
+
+Inspect the active auth mode (never returns secrets):
+
+```bash
+curl http://localhost:3000/api/auth
+```
 
 ## Features implemented
 
@@ -46,6 +71,8 @@ Then open `http://localhost:3000`.
   - body: `{ "title": "task", "prompt": "details" }`
 - `GET /api/state`
   - returns memory/history/agent list
+- `GET /api/auth`
+  - returns `{ "mode": "api_key" | "claude_code_oauth" | "auth_token", "source": "…" }`
 - `GET /api/agents/:agentId/messages`
   - returns inbox and outbox for an agent
 - `POST /api/agents/messages`

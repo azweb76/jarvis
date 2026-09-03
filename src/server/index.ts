@@ -12,7 +12,8 @@ const isDev = process.env.NODE_ENV !== "production";
 const app = express();
 app.use(express.json());
 
-const runtime = new JarvisRuntime(new AnthropicClaudeClient());
+const claudeClient = new AnthropicClaudeClient();
+const runtime = new JarvisRuntime(claudeClient);
 
 app.post("/api/chat", async (req, res) => {
   try {
@@ -44,6 +45,10 @@ app.post("/api/agents/:agentId/tasks", async (req, res) => {
 
 app.get("/api/state", (_req, res) => {
   res.json(runtime.getState());
+});
+
+app.get("/api/auth", (_req, res) => {
+  res.json(claudeClient.getAuthInfo());
 });
 
 app.get("/api/agents/:agentId/messages", (req, res) => {
