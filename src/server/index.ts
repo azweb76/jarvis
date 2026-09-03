@@ -87,7 +87,7 @@ app.post("/api/agents/messages", (req, res) => {
 const start = async () => {
   if (isDev) {
     const vite = await createViteServer({
-      root: path.join(rootDir, "src/web"),
+      configFile: path.join(rootDir, "vite.config.ts"),
       server: { middlewareMode: true },
       appType: "spa"
     });

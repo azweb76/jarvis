@@ -9,6 +9,7 @@ It is currently designed for a single local desktop user profile (no auth/user i
 - TypeScript
 - Node + Express
 - Claude SDK (`@anthropic-ai/sdk`) with API key or Claude Code OAuth auth
+- React + Material UI v9 (light/dark/system color schemes)
 - Vite for frontend SPA assets
 - Vitest for tests
 - pnpm for package management
@@ -51,8 +52,9 @@ curl http://localhost:3000/api/auth
 - Self-improvement primitives:
   - SQLite-backed memory store for persistent context in runtime
   - Skill notes registry that evolves with interactions
-- Agent message visibility:
-  - inspect per-agent inbox/outbox traffic from the UI
+- Agent message APIs:
+  - inspect per-agent inbox/outbox and send structured agent messages via HTTP
+  - React HUD UI for inbox/outbox is not ported yet
 
 ## Run
 
